@@ -14,10 +14,12 @@ use App\Http\Controllers\AdminController;
 */
 
 // Public Routes
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login',    [AuthController::class, 'login']);
-Route::get('/courses',   [CourseController::class, 'index']);
-Route::get('/courses/{id}', [CourseController::class, 'show']);
+Route::post('/register',      [AuthController::class, 'register']);
+Route::post('/login',         [AuthController::class, 'login']);
+Route::post('/verify-email',  [AuthController::class, 'verifyEmail']);
+Route::post('/resend-code',   [AuthController::class, 'resendCode']);
+Route::get('/courses',        [CourseController::class, 'index']);
+Route::get('/courses/{id}',   [CourseController::class, 'show']);
 Route::get('/courses/{courseId}/comments', [CommentController::class, 'index']);
 
 // Protected Routes (require Sanctum token)

@@ -19,6 +19,16 @@ import CalendarPage  from './pages/CalendarPage';
 import DashboardLayout from './layouts/DashboardLayout';
 import { Navigate } from 'react-router-dom';
 
+// Redirect authenticated users away from the landing/auth pages
+const HomeRoute = () => {
+  const token = localStorage.getItem('token');
+  const user  = JSON.parse(localStorage.getItem('user'));
+  if (token && user) {
+    return <Navigate to={user.is_admin ? '/admin' : '/dashboard'} replace />;
+  }
+  return <LandingPage />;
+};
+
 import './index.css';
 
 const AdminRoute = ({ children }) => {
@@ -34,7 +44,7 @@ function App() {
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/"         element={<LandingPage />} />
+        <Route path="/"         element={<HomeRoute />} />
         <Route path="/login"    element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
 
