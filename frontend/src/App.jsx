@@ -31,6 +31,27 @@ const HomeRoute = () => {
 
 import './index.css';
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error) { return { hasError: true }; }
+  componentDidCatch(error, errorInfo) { console.error("Global Error:", error, errorInfo); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#030308', color: '#fff', textAlign: 'center', padding: '2rem' }}>
+          <h1 className="brand-font" style={{ fontSize: '3rem', color: '#7000ff' }}>Système Interrompu</h1>
+          <p style={{ color: '#8b8b9c', margin: '1rem 0 2rem', maxWidth: '500px' }}>Une erreur inattendue est survenue dans le moteur de VibeAcademy. Veuillez rafraîchir la page.</p>
+          <button className="btn-pro btn-pro-primary" onClick={() => window.location.reload()}>Recharger le système</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const AdminRoute = ({ children }) => {
   const user = JSON.parse(localStorage.getItem('user'));
   if (!user || user.is_admin === 0 || user.is_admin === false) {
@@ -41,10 +62,11 @@ const AdminRoute = ({ children }) => {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/"         element={<HomeRoute />} />
+    <ErrorBoundary>
+      <Router>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/"         element={<HomeRoute />} />
         <Route path="/login"    element={<AuthPage mode="login" />} />
         <Route path="/register" element={<AuthPage mode="register" />} />
 
@@ -66,7 +88,8 @@ function App() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Router>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

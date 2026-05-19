@@ -150,6 +150,16 @@ class AuthController extends Controller
             return response()->json(['message' => 'E-mail ou mot de passe incorrect. Vérifiez vos identifiants.'], 401);
         }
 
+        // Maintenance Check: Block regular users during maintenance
+        $maintenance = \App\Models\SiteSetting::where('key', 'maintenance_mode')->first();
+        if ($maintenance && $maintenance->value === '1' && !$user->is_admin) {
+            $msg = \App\Models\SiteSetting::where('key', 'maintenance_message')->first();
+            return response()->json([
+                'message' => $msg ? $msg->value : 'Le système est en maintenance.',
+                'maintenance' => true
+            ], 503);
+        }
+
         // Block unverified accounts
         if (!$user->email_verified_at) {
             return response()->json([

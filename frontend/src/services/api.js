@@ -20,6 +20,14 @@ api.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+    if (error.response && error.response.status === 503) {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!user.is_admin) {
+        const serverMessage = error.response.data?.message || "Le système est en maintenance.";
+        alert(serverMessage);
+        window.location.href = '/';
+      }
+    }
     return Promise.reject(error);
   }
 );

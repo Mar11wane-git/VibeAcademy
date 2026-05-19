@@ -86,7 +86,7 @@ const AdminLayout = ({ children }) => {
             </div>
           ))}
           <div className="nav-section-label" style={{ marginTop: '2rem' }}>Paramètres</div>
-          <div className="admin-nav-item" onClick={() => navigate('/settings')}>
+          <div className={`admin-nav-item ${location.pathname === '/admin/settings' ? 'active' : ''}`} onClick={() => navigate('/admin/settings')}>
             <Settings size={20} />
             <span>Réglages Système</span>
           </div>
