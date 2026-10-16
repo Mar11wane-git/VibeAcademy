@@ -1,0 +1,140 @@
+Terminé', icon: '✓' };
+  Plugin: vite:react-babel
+  File: C:/Users/HP/OneDrive/Bureau/VibeCoding/frontend/src/pages/MesCours.jsx:5:2
+  3  |  import { motion } from 'framer-motion';
+  4  |  import { BookOpen, Play, Star, Users, ArrowRight, GraduationCap, Clock, BarChart, Calendar, Activ        
+  5  |    +ity, Award } from 'lucide-react';import api from '../services/api';
+     |    ^
+  6  |
+  7  |  const statusConfig = (progress) => {
+      at constructor (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:365:19)
+      at JSXParserMixin.raise (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+      at JSXParserMixin.unexpected (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:6619:16)
+      at JSXParserMixin.expect (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:6899:12)
+      at JSXParserMixin.parseNamedImportSpecifiers (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14391:14)
+      at JSXParserMixin.parseImportSpecifiersAndAfter (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14242:37)
+      at JSXParserMixin.parseImport (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14235:17)
+      at JSXParserMixin.parseStatementContent (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12876:27)
+      at JSXParserMixin.parseStatementLike (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12767:17)
+      at JSXParserMixin.parseModuleItem (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12744:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:13316:36)
+      at JSXParserMixin.parseBlockBody (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:13309:10)
+      at JSXParserMixin.parseProgram (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12622:10)
+      at JSXParserMixin.parseTopLevel (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12612:25)
+      at JSXParserMixin.parse (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14488:25)
+      at parse (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14522:38)
+      at parser (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\parser\index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\transformation\normalize-file.js:64:37)
+      at normalizeFile.next (<anonymous>)
+      at run (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\transformation\index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:261:32)
+      at C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:223:11)
+      at C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:189:28
+      at C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\gensync-utils\async.js:67:7
+      at C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:113:33
+      at step (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:287:14)
+      at C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:223:11)
+17:37:10 [vite] hmr update /src/pages/MesCours.jsx
+17:37:10 [vite] Internal server error: C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\src\pages\MesCours.jsx: Unexpected token, expected "," (5:2)
+
+  3 | import { motion } from 'framer-motion';
+  4 | import { BookOpen, Play, Star, Users, ArrowRight, GraduationCap, Clock, BarChart, Calendar, Activ
+> 5 |   +ity, Award } from 'lucide-react';
+    |   ^
+  6 |   import api from '../services/api';
+  7 |
+  8 | const statusConfig = (progress) => {
+  Plugin: vite:react-babel
+  File: C:/Users/HP/OneDrive/Bureau/VibeCoding/frontend/src/pages/MesCours.jsx:5:2
+  3  |  import { motion } from 'framer-motion';
+  4  |  import { BookOpen, Play, Star, Users, ArrowRight, GraduationCap, Clock, BarChart, Calendar, Activ        
+  5  |    +ity, Award } from 'lucide-react';
+     |    ^
+  6  |    import api from '../services/api';
+  7  |
+      at constructor (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:365:19)
+      at JSXParserMixin.raise (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+      at JSXParserMixin.unexpected (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:6619:16)
+      at JSXParserMixin.expect (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:6899:12)
+      at JSXParserMixin.parseNamedImportSpecifiers (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14391:14)
+      at JSXParserMixin.parseImportSpecifiersAndAfter (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14242:37)
+      at JSXParserMixin.parseImport (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14235:17)
+      at JSXParserMixin.parseStatementContent (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12876:27)
+      at JSXParserMixin.parseStatementLike (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12767:17)
+      at JSXParserMixin.parseModuleItem (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12744:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:13316:36)
+      at JSXParserMixin.parseBlockBody (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:13309:10)
+      at JSXParserMixin.parseProgram (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12622:10)
+      at JSXParserMixin.parseTopLevel (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12612:25)
+      at JSXParserMixin.parse (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14488:25)
+      at parse (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14522:38)
+      at parser (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\parser\index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\transformation\normalize-file.js:64:37)
+      at normalizeFile.next (<anonymous>)
+      at run (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\transformation\index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:261:32)
+      at C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:223:11)
+      at C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:189:28
+      at C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\gensync-utils\async.js:67:7
+      at C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:113:33
+      at step (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:287:14)
+      at C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:223:11)
+17:37:13 [vite] hmr update /src/pages/MesCours.jsx
+17:37:13 [vite] Internal server error: C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\src\pages\MesCours.jsx: Unexpected token, expected "," (5:0)
+
+  3 | import { motion } from 'framer-motion';
+  4 | import { BookOpen, Play, Star, Users, ArrowRight, GraduationCap, Clock, BarChart, Calendar, Activ
+> 5 | ity, Award } from 'lucide-react';
+    | ^
+  6 |   import api from '../services/api';
+  7 |
+  8 | const statusConfig = (progress) => {
+  Plugin: vite:react-babel
+  File: C:/Users/HP/OneDrive/Bureau/VibeCoding/frontend/src/pages/MesCours.jsx:5:0
+  3  |  import { motion } from 'framer-motion';
+  4  |  import { BookOpen, Play, Star, Users, ArrowRight, GraduationCap, Clock, BarChart, Calendar, Activ        
+  5  |  ity, Award } from 'lucide-react';
+     |  ^
+  6  |    import api from '../services/api';
+  7  |
+      at constructor (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:365:19)
+      at JSXParserMixin.raise (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:6599:19)
+      at JSXParserMixin.unexpected (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:6619:16)
+      at JSXParserMixin.expect (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:6899:12)
+      at JSXParserMixin.parseNamedImportSpecifiers (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14391:14)
+      at JSXParserMixin.parseImportSpecifiersAndAfter (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14242:37)
+      at JSXParserMixin.parseImport (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14235:17)
+      at JSXParserMixin.parseStatementContent (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12876:27)
+      at JSXParserMixin.parseStatementLike (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12767:17)
+      at JSXParserMixin.parseModuleItem (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12744:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:13316:36)
+      at JSXParserMixin.parseBlockBody (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:13309:10)
+      at JSXParserMixin.parseProgram (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12622:10)
+      at JSXParserMixin.parseTopLevel (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:12612:25)
+      at JSXParserMixin.parse (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14488:25)
+      at parse (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\parser\lib\index.js:14522:38)
+      at parser (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\parser\index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\transformation\normalize-file.js:64:37)
+      at normalizeFile.next (<anonymous>)
+      at run (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\transformation\index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\@babel\core\lib\transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:261:32)
+      at C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:273:13
+      at async.call.result.err.err (C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:223:11)
+      at C:\Users\HP\OneDrive\Bureau\VibeCoding\frontend\node_modules\gensync\index.js:189:28
+      at C:\Users\HP\One

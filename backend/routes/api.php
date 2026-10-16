@@ -78,6 +78,7 @@ Route::middleware('maintenance')->group(function () {
             Route::post('/courses',         [CourseController::class, 'store']);
             Route::put('/courses/{id}',     [CourseController::class, 'update']);
             Route::post('/courses/{id}/modules', [CourseController::class, 'addModule']);
+            Route::delete('/courses/{courseId}/modules/{moduleId}', [CourseController::class, 'deleteModule']);
         });
     });
 });

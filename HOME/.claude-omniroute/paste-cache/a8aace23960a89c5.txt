@@ -1,0 +1,29 @@
+Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+react-dom_client.js?v=6eca4bc8:7001 ReferenceError: Activity is not defined
+    at MesCours.jsx:128:97
+    at Array.map (<anonymous>)
+    at MesCours (MesCours.jsx:81:21)
+    at Object.react_stack_bottom_frame (react-dom_client.js?v=6eca4bc8:18509:20)
+    at renderWithHooks (react-dom_client.js?v=6eca4bc8:5654:24)
+    at updateFunctionComponent (react-dom_client.js?v=6eca4bc8:7475:21)
+    at beginWork (react-dom_client.js?v=6eca4bc8:8525:20)
+    at runWithFiberInDEV (react-dom_client.js?v=6eca4bc8:997:72)
+    at performUnitOfWork (react-dom_client.js?v=6eca4bc8:12561:98)
+    at workLoopSync (react-dom_client.js?v=6eca4bc8:12424:43)
+
+The above error occurred in the <MesCours> component.
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.
+
+defaultOnCaughtError @ react-dom_client.js?v=6eca4bc8:7001
+App.jsx:40 Global Error: ReferenceError: Activity is not defined
+    at MesCours.jsx:128:97
+    at Array.map (<anonymous>)
+    at MesCours (MesCours.jsx:81:21)
+    at Object.react_stack_bottom_frame (react-dom_client.js?v=6eca4bc8:18509:20)
+    at renderWithHooks (react-dom_client.js?v=6eca4bc8:5654:24)
+    at updateFunctionComponent (react-dom_client.js?v=6eca4bc8:7475:21)
+    at beginWork (react-dom_client.js?v=6eca4bc8:8525:20)
+    at runWithFiberInDEV (react-dom_client.js?v=6eca4bc8:997:72)
+    at performUnitOfWork (react-dom_client.js?v=6eca4bc8:12561:98)
+    at workLoopSync (react-dom_client.js?v=6eca4bc8:12424:43) Object

@@ -81,9 +81,31 @@ class CourseController extends Controller
             'video_url.required' => 'Le lien de la vidéo est requis.',
         ]);
 
+        // Auto-assign order
+        $data['order'] = $course->modules()->count() + 1;
+
         $module = $course->modules()->create($data);
 
         return response()->json($module, 201);
+    }
+
+    public function deleteModule($courseId, $moduleId)
+    {
+        $module = \App\Models\Module::where('id', $moduleId)
+            ->where('course_id', $courseId)
+            ->firstOrFail();
+
+        $module->delete();
+
+        // Re-order remaining modules
+        $remaining = \App\Models\Module::where('course_id', $courseId)
+            ->orderBy('order')
+            ->get();
+        foreach ($remaining as $i => $m) {
+            $m->update(['order' => $i + 1]);
+        }
+
+        return response()->json(['message' => 'Module supprimé.']);
     }
 
     /**

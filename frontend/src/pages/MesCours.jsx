@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Play, Star, Users, ArrowRight, GraduationCap, Clock, BarChart, Calendar } from 'lucide-react';
+import { BookOpen, Play, Star, Users, ArrowRight, GraduationCap, Clock, BarChart, Calendar, Activity, Award } from 'lucide-react';
 import api from '../services/api';
 
 const statusConfig = (progress) => {

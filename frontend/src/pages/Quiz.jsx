@@ -64,14 +64,32 @@ const Quiz = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [courseRes, enrollsRes] = await Promise.all([
-          api.get(`/courses/${id}`),
-          api.get('/my-enrollments')
-        ]);
-        
-        const enrollment = enrollsRes.data.find(e => e.course_id === parseInt(id));
-        if (!enrollment || enrollment.progress < 100) {
-          setError("Vous devez terminer 100% du cours avant de passer l'examen.");
+        const courseRes = await api.get(`/courses/${id}`);
+        const totalModules = courseRes.data.modules?.length || 0;
+
+        // Try /my-enrollments first, fallback to /my-courses
+        let enrollment = null;
+        try {
+          const enrollsRes = await api.get('/my-enrollments');
+          enrollment = enrollsRes.data.find(e => e.course_id === parseInt(id));
+        } catch {
+          const myCoursesRes = await api.get('/my-courses');
+          enrollment = myCoursesRes.data.find(e => e.course_id === parseInt(id));
+        }
+
+        if (!enrollment) {
+          setError("Vous devez d'abord vous inscrire et terminer 100% du cours.");
+          setLoading(false);
+          return;
+        }
+
+        // Compute progress from completed_modules if progress field is unreliable
+        const completedCount = enrollment.completed_modules?.length || 0;
+        const computedProgress = totalModules > 0 ? Math.round((completedCount / totalModules) * 100) : (enrollment.progress || 0);
+        const actualProgress = Math.max(enrollment.progress || 0, computedProgress);
+
+        if (actualProgress < 100) {
+          setError(`Vous devez terminer 100% du cours avant de passer l'examen. Progression actuelle : ${actualProgress}% (${completedCount}/${totalModules} modules).`);
           setLoading(false);
           return;
         }

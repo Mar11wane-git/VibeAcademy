@@ -1,0 +1,10 @@
+{
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "C:\\Users\\HP\\OneDrive\\Bureau\\VibeCoding\\HOME\\.claude-omniroute\\plugins\\marketplaces\\claude-plugins-official",
+    "lastUpdated": "2026-10-13T02:43:19.577Z"
+  }
+}

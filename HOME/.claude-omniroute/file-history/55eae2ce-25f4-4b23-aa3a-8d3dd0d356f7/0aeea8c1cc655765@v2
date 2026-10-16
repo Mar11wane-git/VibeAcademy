@@ -1,0 +1,430 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Users, BookOpen, MessageSquare, TrendingUp,
+  Trash2, Plus, Edit, X, Lock,
+  BarChart3, CheckCircle2, Search,
+  RefreshCw, Award, Shield, Film, ChevronDown, ChevronUp
+} from 'lucide-react';
+import api from '../services/api';
+import AdminLayout from '../layouts/AdminLayout';
+import { useLocation } from 'react-router-dom';
+
+const AdminPanel = () => {
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState('Dashboard');
+  const [systemSettings, setSystemSettings] = useState({
+    maintenance_mode: '0',
+    allow_registrations: '1',
+    auto_emails: '1'
+  });
+
+  const fetchSettings = async () => {
+    try {
+      const res = await api.get('/admin/settings');
+      setSystemSettings(res.data);
+    } catch (err) {
+      console.error("Failed to load settings");
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      await api.post('/admin/settings', systemSettings);
+      showToast('Configuration système synchronisée en temps réel !');
+    } catch (err) {
+      showToast('Échec de la synchronisation', 'error');
+    }
+  };
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/admin/courses') setActiveTab('Courses');
+    else if (path === '/admin/users') setActiveTab('Students');
+    else if (path === '/admin/settings') setActiveTab('Settings');
+    else setActiveTab('Dashboard');
+  }, [location.pathname]);
+
+  const [stats, setStats] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const [modalType, setModalType] = useState(null);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [newCourse, setNewCourse] = useState({ title: '', description: '', thumbnail: '', price: 0 });
+  const [editCourse, setEditCourse] = useState({ title: '', description: '', thumbnail: '', price: 0 });
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  useEffect(() => { 
+    fetchData();
+    fetchSettings();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [sRes, cRes, uRes] = await Promise.all([
+        api.get('/admin/stats'),
+        api.get('/admin/courses'),
+        api.get('/admin/users')
+      ]);
+      setStats(sRes.data);
+      setCourses(cRes.data);
+      setUsers(uRes.data);
+    } catch (err) {
+      showToast('Erreur de synchronisation.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateCourse = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/courses', newCourse);
+      setModalType(null);
+      setNewCourse({ title: '', description: '', thumbnail: '', price: 0 });
+      fetchData();
+      showToast('Cours publié avec succès !');
+    } catch (err) {
+      showToast("Erreur de publication", 'error');
+    }
+  };
+
+  const handleEditCourse = async (e) => {
+    e.preventDefault();
+    if (!selectedCourse) return;
+    try {
+      await api.put(`/courses/${selectedCourse.id}`, editCourse);
+      setModalType(null);
+      fetchData();
+      showToast('Modifications enregistrées.');
+    } catch (err) {
+      showToast("Mise à jour échouée", 'error');
+    }
+  };
+
+  const handleToggleAdmin = async (userId) => {
+    try {
+      const res = await api.post(`/admin/users/${userId}/toggle-admin`);
+      showToast(res.data.message);
+      fetchData();
+    } catch (err) {
+      showToast('Droit de modification refusé.', 'error');
+    }
+  };
+
+  const filteredCourses = useMemo(() =>
+    courses.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase())),
+    [courses, searchQuery]
+  );
+
+  const filteredUsers = useMemo(() => {
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    return users.filter(u =>
+      u.id !== currentUser.id && (
+        u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    );
+  }, [users, searchQuery]);
+
+  const chartData = stats?.monthly_registrations || [];
+  const topCourses = stats?.top_courses || [];
+
+  return (
+    <AdminLayout>
+      <div className="admin-content-scroller" style={{ padding: '2rem 2.5rem', flex: 1, overflowY: 'auto' }}>
+        
+        {/* Modern Header - Adjusted sizing */}
+        <div className="governance-header">
+          <div>
+            <div className="security-badge">
+              <Lock size={12} /> SYSTÈME SÉCURISÉ
+            </div>
+            <h1 className="brand-font" style={{ fontSize: '2.4rem', margin: '0.75rem 0' }}>Centre de Gestion</h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Gérez les formations et surveillez la croissance de VibeAcademy.</p>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div className="admin-search-bar" style={{ width: 280 }}>
+              <Search size={16} />
+              <input type="text" placeholder="Rechercher..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+            </div>
+            <button className="btn-pro btn-pro-primary" onClick={() => setModalType('course')}>
+              <Plus size={18} /> Nouveau Cours
+            </button>
+          </div>
+        </div>
+
+        {/* Tab UI - Integrated touch */}
+        <div className="admin-tab-nav" style={{ marginBottom: '3rem' }}>
+          {[
+            { id: 'Dashboard', icon: BarChart3, label: 'Performance' },
+            { id: 'Courses', icon: BookOpen, label: 'Catalogue' },
+            { id: 'Students', icon: Users, label: 'Apprenants' },
+            { id: 'Settings', icon: Shield, label: 'Système' }
+          ].map(tab => (
+            <button key={tab.id} className={`admin-tab-item ${activeTab === tab.id ? 'active' : ''}`} onClick={() => setActiveTab(tab.id)}>
+              <tab.icon size={16} /> {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {loading ? (
+          <div className="flex-center" style={{ flexDirection: 'column', gap: '1.5rem', height: '40vh' }}>
+            <RefreshCw size={40} className="spin-slow" color="#7000ff" />
+            <p className="brand-font" style={{ color: 'var(--text-muted)' }}>Synchronisation en cours...</p>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            
+            {activeTab === 'Dashboard' && (
+              <motion.div key="dash" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <div className="stat-grid">
+                  <StatCard label="Étudiants" value={stats?.users || 0} icon={<Users size={22}/>} color="#a78bfa" />
+                  <StatCard label="Formations" value={stats?.courses || 0} icon={<BookOpen size={22}/>} color="#0bd1ff" />
+                  <StatCard label="Réussite" value={stats?.completion_rate || 0} unit="%" icon={<Award size={22}/>} color="#4ade80" />
+                  <StatCard label="Retours" value={stats?.comments || 0} icon={<MessageSquare size={22}/>} color="#f59e0b" />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+                  <div className="glass-card" style={{ padding: '2rem' }}>
+                     <h3 className="brand-font" style={{ marginBottom: '2rem', fontSize: '1.2rem' }}>Inscriptions Mensuelles</h3>
+                     <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', height: '180px', paddingBottom: '0.5rem' }}>
+                        {chartData.map((d, i) => {
+                           const maxCount = Math.max(...chartData.map(x => x.count)) || 1;
+                           const heightPercent = (d.count / maxCount) * 100;
+                           return (
+                             <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', height: '100%' }}>
+                                <div style={{ 
+                                   width: '100%', 
+                                   flex: 1, 
+                                   background: 'rgba(255,255,255,0.02)', 
+                                   borderRadius: '10px', 
+                                   position: 'relative', 
+                                   overflow: 'hidden',
+                                   display: 'flex',
+                                   alignItems: 'flex-end',
+                                   border: '1px solid rgba(255,255,255,0.03)'
+                                }}>
+                                   {/* The visible bar */}
+                                   <motion.div 
+                                     initial={{ height: 0 }} 
+                                     animate={{ height: `${Math.max(heightPercent, d.count > 0 ? 5 : 2)}%` }}
+                                     style={{ 
+                                       width: '100%', 
+                                       background: d.count > 0 ? 'var(--gradient-magic)' : 'rgba(112,0,255,0.08)', 
+                                       borderRadius: '6px',
+                                       boxShadow: d.count > 0 ? '0 0 15px rgba(112,0,255,0.3)' : 'none'
+                                     }}
+                                   />
+                                </div>
+                                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>{d.month}</span>
+                             </div>
+                           );
+                        })}
+                     </div>
+                  </div>
+                  <div className="glass-card" style={{ padding: '2rem' }}>
+                     <h3 className="brand-font" style={{ marginBottom: '2rem', fontSize: '1.2rem' }}>Formations Populaires</h3>
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        {topCourses.length === 0 ? (
+                           <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '2rem' }}>Aucune donnée d'inscription disponible.</p>
+                        ) : (
+                           topCourses.map(c => {
+                              const maxEnroll = Math.max(...topCourses.map(x => x.enrollments_count)) || 1;
+                              const widthPercent = (c.enrollments_count / maxEnroll) * 100;
+                              return (
+                                <div key={c.id}>
+                                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                                      <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>{c.title}</span>
+                                      <span style={{ color: '#a78bfa', fontWeight: 800, fontSize: '0.8rem' }}>{c.enrollments_count} inscrit{c.enrollments_count > 1 ? 's' : ''}</span>
+                                   </div>
+                                   <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '100px', overflow: 'hidden' }}>
+                                      <motion.div 
+                                        initial={{ width: 0 }} 
+                                        animate={{ width: `${widthPercent || 2}%` }} // Minimal 2% width to show the bar exists
+                                        style={{ height: '100%', background: 'var(--gradient-cyber)', borderRadius: '100px' }} 
+                                      />
+                                   </div>
+                                </div>
+                              );
+                           })
+                        )}
+                     </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'Courses' && (
+              <motion.div key="courses" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                 {filteredCourses.map(c => (
+                   <div key={c.id} className="asset-row" style={{ gridTemplateColumns: '80px 1fr 140px 100px 120px' }}>
+                      <img src={c.thumbnail} alt="" style={{ width: 80, height: 50, borderRadius: '10px', objectFit: 'cover' }} />
+                      <div>
+                         <h4 style={{ fontWeight: 800 }}>{c.title}</h4>
+                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{c.price > 0 ? `${c.price}€` : 'Gratuit'}</span>
+                      </div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#a78bfa' }}>{c.enrollments_count} Éléves</div>
+                      <div style={{ color: '#4ade80', fontSize: '0.65rem', padding: '0.4rem', background: 'rgba(74,222,128,0.1)', borderRadius: '8px', textAlign: 'center', fontWeight: 800 }}>ACTIF</div>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                         <button className="admin-action-btn" onClick={() => { setSelectedCourse(c); setEditCourse({title: c.title, description: c.description, thumbnail: c.thumbnail, price: c.price}); setModalType('editCourse'); }}><Edit size={18} /></button>
+                         <button className="admin-action-btn danger" onClick={() => api.delete(`/admin/courses/${c.id}`).then(fetchData)}><Trash2 size={18} /></button>
+                      </div>
+                   </div>
+                 ))}
+              </motion.div>
+            )}
+
+            {activeTab === 'Students' && (
+              <motion.div key="users" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                 {filteredUsers.map(u => (
+                   <div key={u.id} className="asset-row" style={{ gridTemplateColumns: '50px 1fr 180px 100px 100px' }}>
+                      <div style={{ width: 44, height: 44, borderRadius: '12px', background: u.is_admin ? 'rgba(112,0,255,0.1)' : 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: u.is_admin ? '#a78bfa' : '#fff' }}>{u.name[0]}</div>
+                      <div>
+                         <h4 style={{ fontWeight: 700 }}>{u.name}</h4>
+                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{u.email}</p>
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{new Date(u.created_at).toLocaleDateString()}</div>
+                      <div style={{ 
+                        fontSize: '0.65rem', padding: '0.3rem', borderRadius: '6px', textAlign: 'center', fontWeight: 800, 
+                        background: u.is_admin ? 'rgba(112,0,255,0.2)' : 'rgba(255,255,255,0.05)',
+                        color: u.is_admin ? '#a78bfa' : 'var(--text-muted)'
+                      }}>
+                        {u.is_admin ? 'ADMIN' : 'USER'}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                         <button 
+                           className={`admin-action-btn ${u.is_admin ? 'active-admin' : ''}`} 
+                           onClick={() => handleToggleAdmin(u.id)}
+                           title={u.is_admin ? "Rétrograder en utilisateur" : "Promouvoir en admin"}
+                         >
+                           <Shield size={18} color={u.is_admin ? '#a78bfa' : 'currentColor'} />
+                         </button>
+                      </div>
+                   </div>
+                 ))}
+              </motion.div>
+            )}
+
+            {activeTab === 'Settings' && (
+              <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                 <div className="glass-card" style={{ padding: '2.5rem', maxWidth: '650px' }}>
+                    <h3 className="brand-font" style={{ marginBottom: '2rem' }}>Réglages Système</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                       <SettingItem 
+                         title="Mode Maintenance" 
+                         desc="Désactive l'accès public au catalogue." 
+                         checked={systemSettings.maintenance_mode === '1'} 
+                         onToggle={() => setSystemSettings({...systemSettings, maintenance_mode: systemSettings.maintenance_mode === '1' ? '0' : '1'})}
+                       />
+                       
+                       {systemSettings.maintenance_mode === '1' && (
+                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} style={{ padding: '1rem', background: 'rgba(112,0,255,0.05)', borderRadius: '12px', border: '1px solid rgba(112,0,255,0.1)' }}>
+                            <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#a78bfa', marginBottom: '0.5rem', display: 'block' }}>Message de Maintenance</label>
+                            <textarea 
+                              className="form-group-input" 
+                              style={{ minHeight: '60px', fontSize: '0.85rem' }} 
+                              value={systemSettings.maintenance_message || ''}
+                              onChange={(e) => setSystemSettings({...systemSettings, maintenance_message: e.target.value})}
+                              placeholder="Écrivez le message ici..."
+                            />
+                         </motion.div>
+                       )}
+
+                       <SettingItem 
+                         title="Inscriptions" 
+                         desc="Autorise la création de nouveaux comptes." 
+                         checked={systemSettings.allow_registrations === '1'} 
+                         onToggle={() => setSystemSettings({...systemSettings, allow_registrations: systemSettings.allow_registrations === '1' ? '0' : '1'})}
+                       />
+                       <SettingItem 
+                         title="Emails Automatiques" 
+                         desc="Notifications d'inscription et certificats." 
+                         checked={systemSettings.auto_emails === '1'} 
+                         onToggle={() => setSystemSettings({...systemSettings, auto_emails: systemSettings.auto_emails === '1' ? '0' : '1'})}
+                       />
+                       <button className="btn-pro btn-pro-primary" style={{ marginTop: '1rem' }} onClick={handleSaveSettings}>Enregistrer la configuration</button>
+                    </div>
+                 </div>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+        )}
+
+        {/* Modals */}
+        {modalType && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '2.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
+                 <h2 className="brand-font">{modalType === 'editCourse' ? 'Modifier' : 'Nouveau Cours'}</h2>
+                 <button onClick={() => setModalType(null)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}><X size={24} /></button>
+              </div>
+              <form onSubmit={modalType === 'editCourse' ? handleEditCourse : handleCreateCourse} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                 <div className="form-group">
+                    <label>Titre</label>
+                    <input style={{ background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', padding: '0.8rem', borderRadius: '10px', color: '#fff' }} value={modalType === 'editCourse' ? editCourse.title : newCourse.title} onChange={e => modalType === 'editCourse' ? setEditCourse({...editCourse, title: e.target.value}) : setNewCourse({...newCourse, title: e.target.value})} required />
+                 </div>
+                 <div className="form-group">
+                    <label>Description</label>
+                    <textarea style={{ background: 'var(--bg-primary)', border: '1px solid var(--glass-border)', padding: '0.8rem', borderRadius: '10px', color: '#fff', minHeight: 100 }} value={modalType === 'editCourse' ? editCourse.description : newCourse.description} onChange={e => modalType === 'editCourse' ? setEditCourse({...editCourse, description: e.target.value}) : setNewCourse({...newCourse, description: e.target.value})} required />
+                 </div>
+                 <button type="submit" className="btn-pro btn-pro-primary">Confirmer</button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Toasts */}
+        <AnimatePresence>
+          {toast && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="toast-admin" style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 10000, background: 'rgba(112,0,255,0.9)', color: '#fff', padding: '1rem 2rem', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.3)', fontWeight: 600 }}>
+              {toast.msg}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+      </div>
+    </AdminLayout>
+  );
+};
+
+const StatCard = ({ label, value, unit = '', icon, color }) => (
+  <div className="stat-box" style={{ borderLeft: `4px solid ${color}`, padding: '1.5rem' }}>
+     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={{ color, background: `${color}10`, padding: '0.6rem', borderRadius: '12px' }}>{icon}</div>
+        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{label}</span>
+     </div>
+     <div style={{ fontSize: '2.4rem', fontWeight: 900 }}>{value}{unit}</div>
+  </div>
+);
+
+const SettingItem = ({ title, desc, checked, onToggle }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', background: 'rgba(255,255,255,0.02)', borderRadius: '14px', border: '1px solid var(--glass-border)' }}>
+     <div>
+        <p style={{ fontWeight: 700, fontSize: '0.95rem' }}>{title}</p>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{desc}</p>
+     </div>
+     <div 
+       style={{ width: 44, height: 22, background: checked ? '#7000ff' : '#333', borderRadius: '20px', position: 'relative', cursor: 'pointer', transition: 'background 0.3s' }}
+       onClick={onToggle}
+     >
+        <motion.div 
+          animate={{ x: checked ? 24 : 4 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          style={{ position: 'absolute', top: 3, width: 16, height: 16, background: '#fff', borderRadius: '50%' }}
+        />
+     </div>
+  </div>
+);
+
+export default AdminPanel;

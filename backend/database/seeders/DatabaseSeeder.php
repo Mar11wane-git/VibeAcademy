@@ -134,8 +134,10 @@ class DatabaseSeeder extends Seeder
                 'rating'      => 4.7,
                 'students'    => 5400,
                 'modules'     => [
-                    ['Introduction à Oracle DB', '15:20', 'https://www.youtube.com/watch?v=SqcY0GlETPk'],
-                    ['SQL Avancé et PL/SQL', '30:10', 'https://www.youtube.com/watch?v=O6P86uwfdR0'],
+                    ['Introduction à Oracle Database', '15:20', 'https://www.youtube.com/watch?v=wG6z3Kg8Ep4'],
+                    ['SQL Fondamental : SELECT, JOIN, GROUP BY', '30:10', 'https://www.youtube.com/watch?v=7S_tz1z_5bA'],
+                    ['PL/SQL : Procédures et Fonctions', '28:00', 'https://www.youtube.com/watch?v=t1Bt0LFaIXw'],
+                    ['Administration et Sauvegarde', '35:45', 'https://www.youtube.com/watch?v=h0nxCDiD-zg'],
                 ],
             ],
             [
@@ -146,8 +148,10 @@ class DatabaseSeeder extends Seeder
                 'rating'      => 4.9,
                 'students'    => 11200,
                 'modules'     => [
-                    ['Fondamentaux de ASP.NET Core', '20:00', 'https://www.youtube.com/watch?v=SqcY0GlETPk'],
-                    ['Création de Web APIs', '35:45', 'https://www.youtube.com/watch?v=O6P86uwfdR0'],
+                    ['Introduction à ASP.NET Core 8', '20:00', 'https://www.youtube.com/watch?v=ravLFzIGuCM'],
+                    ['MVC Pattern et Razor Pages', '30:15', 'https://www.youtube.com/watch?v=pTB0EiLXUC8'],
+                    ['Entity Framework Core et Migrations', '35:45', 'https://www.youtube.com/watch?v=fmvcAzHpsk8'],
+                    ['Web API REST et Authentication', '42:00', 'https://www.youtube.com/watch?v=yClSNpoj-kQ'],
                 ],
             ],
             [
@@ -158,8 +162,11 @@ class DatabaseSeeder extends Seeder
                 'rating'      => 4.8,
                 'students'    => 20500,
                 'modules'     => [
-                    ['Fondamentaux de Java', '18:30', 'https://www.youtube.com/watch?v=SqcY0GlETPk'],
-                    ['Architecture Spring Boot', '28:15', 'https://www.youtube.com/watch?v=O6P86uwfdR0'],
+                    ['Fondamentaux de Java 21', '18:30', 'https://www.youtube.com/watch?v=eIrMbAQSU34'],
+                    ['Spring Boot : Configuration et Démarrage', '28:15', 'https://www.youtube.com/watch?v=9SGDpanrc8U'],
+                    ['Spring Data JPA et Repositories', '35:00', 'https://www.youtube.com/watch?v=Zs342ePFvRI'],
+                    ['Spring Security et JWT', '40:20', 'https://www.youtube.com/watch?v=IUqKuGNasdM'],
+                    ['Micro-services et Docker', '45:00', 'https://www.youtube.com/watch?v=drQK8ciCAjY'],
                 ],
             ],
             [
@@ -170,8 +177,10 @@ class DatabaseSeeder extends Seeder
                 'rating'      => 4.6,
                 'students'    => 4000,
                 'modules'     => [
-                    ['Variables et Pointeurs en C', '22:15', 'https://www.youtube.com/watch?v=SqcY0GlETPk'],
-                    ['Gestion de la mémoire', '40:00', 'https://www.youtube.com/watch?v=O6P86uwfdR0'],
+                    ['Introduction au Langage C', '22:15', 'https://www.youtube.com/watch?v=KJgsSFOSQv0'],
+                    ['Variables, Boucles et Conditions', '30:00', 'https://www.youtube.com/watch?v=aZb0iu4AZXY'],
+                    ['Pointeurs et Tableaux', '35:20', 'https://www.youtube.com/watch?v=zuegQmMdy8M'],
+                    ['Gestion de la Mémoire Dynamique', '40:00', 'https://www.youtube.com/watch?v=ix5jPkxsr7M'],
                 ],
             ],
             [
@@ -182,8 +191,10 @@ class DatabaseSeeder extends Seeder
                 'rating'      => 4.9,
                 'students'    => 13800,
                 'modules'     => [
-                    ['Programmation Orientée Objet C#', '25:00', 'https://www.youtube.com/watch?v=SqcY0GlETPk'],
-                    ['LINQ et Programmation Asynchrone', '32:30', 'https://www.youtube.com/watch?v=O6P86uwfdR0'],
+                    ['Introduction à C# 12', '25:00', 'https://www.youtube.com/watch?v=ravLFzIGuCM'],
+                    ['Programmation Orientée Objet en C#', '32:30', 'https://www.youtube.com/watch?v=pTB0EiLXUC8'],
+                    ['LINQ et Collections Avancées', '28:15', 'https://www.youtube.com/watch?v=yClSNpoj-kQ'],
+                    ['Programmation Asynchrone (async/await)', '35:00', 'https://www.youtube.com/watch?v=fmvcAzHpsk8'],
                 ],
             ],
             [
@@ -194,8 +205,10 @@ class DatabaseSeeder extends Seeder
                 'rating'      => 4.8,
                 'students'    => 8600,
                 'modules'     => [
-                    ['Concepts Avancés C++', '28:40', 'https://www.youtube.com/watch?v=SqcY0GlETPk'],
-                    ['Templates et Multithreading', '45:10', 'https://www.youtube.com/watch?v=O6P86uwfdR0'],
+                    ['C++20 : Nouveautés et Concepts', '28:40', 'https://www.youtube.com/watch?v=vLnPwxZdW4Y'],
+                    ['STL et Algorithmes Optimisés', '35:00', 'https://www.youtube.com/watch?v=LMXjMmuNiJQ'],
+                    ['Templates et Programmation Générique', '42:15', 'https://www.youtube.com/watch?v=I-hZkUa9mIs'],
+                    ['Multithreading et Concurrence', '45:10', 'https://www.youtube.com/watch?v=UOB7-B2MfwA'],
                 ],
             ],
         ];
