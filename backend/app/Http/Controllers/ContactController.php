@@ -7,12 +7,15 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Mail\SupportTicketMail;
 
 class ContactController extends Controller
 {
     private function ensureSchema(): void
     {
-        if (Cache::get('vibe_contact_schema_v1')) {
+        if (Cache::get('mr1_contact_schema_v2')) {
             return;
         }
 
@@ -32,7 +35,7 @@ class ContactController extends Controller
             });
         }
 
-        Cache::forever('vibe_contact_schema_v1', true);
+        Cache::forever('mr1_contact_schema_v2', true);
     }
 
     public function store(Request $request)
@@ -49,10 +52,9 @@ class ContactController extends Controller
         ]);
 
         $user = $request->user('sanctum') ?? $request->user();
-        $ticketRef = 'VIBE-SUP-' . strtoupper(substr(md5(uniqid((string) mt_rand(), true)), 0, 6));
+        $ticketRef = 'MR1-SUP-' . strtoupper(substr(md5(uniqid((string) mt_rand(), true)), 0, 6));
 
-        $id = DB::table('contact_messages')->insertGetId([
-            'user_id'    => $user ? $user->id : null,
+        $ticketData = [
             'ticket_ref' => $ticketRef,
             'name'       => $validated['name'],
             'email'      => $validated['email'],
@@ -60,6 +62,17 @@ class ContactController extends Controller
             'priority'   => $validated['priority'] ?? 'normale',
             'subject'    => $validated['subject'],
             'message'    => $validated['message'],
+        ];
+
+        $id = DB::table('contact_messages')->insertGetId([
+            'user_id'    => $user ? $user->id : null,
+            'ticket_ref' => $ticketRef,
+            'name'       => $ticketData['name'],
+            'email'      => $ticketData['email'],
+            'category'   => $ticketData['category'],
+            'priority'   => $ticketData['priority'],
+            'subject'    => $ticketData['subject'],
+            'message'    => $ticketData['message'],
             'status'     => 'Reçu • Réponse sous 2h',
             'created_at' => now(),
             'updated_at' => now(),
@@ -67,8 +80,20 @@ class ContactController extends Controller
 
         $ticket = DB::table('contact_messages')->where('id', $id)->first();
 
+        // ─── Envoi immédiat du ticket par email à Marouane El Hamdaoui ───
+        $adminEmail = config('mail.admin_support_email') ?: env('ADMIN_SUPPORT_EMAIL', 'elhamdawimarwane@gmail.com');
+
+        try {
+            Mail::to($adminEmail)->send(new SupportTicketMail($ticketData));
+            Log::info("Ticket Support #{$ticketRef} transmis par email à {$adminEmail}");
+        } catch (\Throwable $e) {
+            Log::error("Erreur d'envoi de l'email pour le ticket #{$ticketRef} : " . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+        }
+
         return response()->json([
-            'message' => 'Votre demande a bien été enregistrée par notre équipe Support.',
+            'message' => 'Votre demande a bien été enregistrée et transmise directement au support MR1Academy.',
             'ticket'  => $ticket,
         ], 201);
     }

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -90,7 +90,7 @@ const ContactPage = () => {
     setSubmitting(true);
     const fallbackTicket = {
       id: Date.now(),
-      ticket_ref: 'VIBE-SUP-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+      ticket_ref: 'MR1-SUP-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
       name: form.name.trim(),
       email: form.email.trim(),
       category: form.category,
@@ -107,12 +107,12 @@ const ContactPage = () => {
       const updated = [savedTicket, ...tickets];
       setTickets(updated);
       localStorage.setItem(LOCAL_TICKETS_KEY, JSON.stringify(updated.slice(0, 10)));
-      setToast(`Ticket #${savedTicket.ticket_ref} transmis avec succès à l'équipe MR1Academy !`);
+      setToast(`Ticket #${savedTicket.ticket_ref} envoyé directement par email au support MR1Academy !`);
     } catch {
       const updated = [fallbackTicket, ...tickets];
       setTickets(updated);
       localStorage.setItem(LOCAL_TICKETS_KEY, JSON.stringify(updated.slice(0, 10)));
-      setToast(`Ticket #${fallbackTicket.ticket_ref} enregistré ! Notre équipe vous répondra sous 2h.`);
+      setToast(`Ticket #${fallbackTicket.ticket_ref} enregistré !`);
     } finally {
       setSubmitting(false);
       setForm(prev => ({ ...prev, subject: '', message: '' }));
