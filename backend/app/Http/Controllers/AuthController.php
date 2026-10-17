@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers;
 
@@ -99,7 +99,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Compte vérifié avec succès ! Bienvenue sur VibeAcademy 🎉',
+            'message' => 'Compte vérifié avec succès ! Bienvenue sur MR1Academy 🎉',
             'user'    => $user,
             'token'   => $token,
         ]);

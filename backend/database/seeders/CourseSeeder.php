@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace Database\Seeders;
 
@@ -14,7 +14,7 @@ class CourseSeeder extends Seeder
     {
         // 1. Ensure Admins & Instructors exist
         $instructor = User::firstOrCreate(
-            ['email' => 'marwane@vibeacademy.com'],
+            ['email' => 'marwane@MR1Academy.com'],
             [
                 'name' => 'Marwane El',
                 'password' => Hash::make('password123'),
@@ -24,7 +24,7 @@ class CourseSeeder extends Seeder
         );
 
         $admin = User::firstOrCreate(
-            ['email' => 'admin@vibeacademy.com'],
+            ['email' => 'admin@MR1Academy.com'],
             [
                 'name' => 'Sara Admin',
                 'password' => Hash::make('password123'),

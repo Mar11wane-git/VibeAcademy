@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, BookOpen, MessageSquare,
@@ -9,6 +9,7 @@ import {
 import api from '../services/api';
 import AdminLayout from '../layouts/AdminLayout';
 import { useLocation } from 'react-router-dom';
+import { getCourseCover, getCourseTechMeta, COURSE_COVER_PRESETS } from '../utils/certificationEngine';
 
 const inputStyle = {
   background: 'var(--bg-primary)',
@@ -65,8 +66,8 @@ const AdminPanel = () => {
   // Course modal state
   const [modalType, setModalType]       = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [newCourse, setNewCourse]   = useState({ title: '', description: '', thumbnail: '', price: 0 });
-  const [editCourse, setEditCourse] = useState({ title: '', description: '', thumbnail: '', price: 0 });
+  const [newCourse, setNewCourse]   = useState({ title: '', description: '', thumbnail: '' });
+  const [editCourse, setEditCourse] = useState({ title: '', description: '', thumbnail: '' });
 
   // Module modal state
   const [moduleCourse, setModuleCourse]   = useState(null); // course being managed
@@ -108,9 +109,13 @@ const AdminPanel = () => {
   const handleCreateCourse = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/courses', newCourse);
+      const payload = {
+        ...newCourse,
+        thumbnail: newCourse.thumbnail || getCourseCover(newCourse),
+      };
+      await api.post('/courses', payload);
       setModalType(null);
-      setNewCourse({ title: '', description: '', thumbnail: '', price: 0 });
+      setNewCourse({ title: '', description: '', thumbnail: '' });
       fetchData();
       showToast('Cours publié avec succès !');
     } catch (err) {
@@ -122,7 +127,11 @@ const AdminPanel = () => {
     e.preventDefault();
     if (!selectedCourse) return;
     try {
-      await api.put(`/courses/${selectedCourse.id}`, editCourse);
+      const payload = {
+        ...editCourse,
+        thumbnail: editCourse.thumbnail || getCourseCover(editCourse),
+      };
+      await api.put(`/courses/${selectedCourse.id}`, payload);
       setModalType(null);
       fetchData();
       showToast('Modifications enregistrées.');
@@ -208,7 +217,7 @@ const AdminPanel = () => {
           <div>
             <div className="security-badge"><Lock size={12} /> SYSTÈME SÉCURISÉ</div>
             <h1 className="brand-font" style={{ fontSize: '2.4rem', margin: '0.75rem 0' }}>Centre de Gestion</h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Gérez les formations et surveillez la croissance de VibeAcademy.</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Gérez les formations et surveillez la croissance de MR1Academy.</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <div className="admin-search-bar" style={{ width: 280 }}>
@@ -305,36 +314,43 @@ const AdminPanel = () => {
                 {filteredCourses.length === 0 && (
                   <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '3rem' }}>Aucun cours trouvé.</p>
                 )}
-                {filteredCourses.map(c => (
-                  <div key={c.id} className="asset-row" style={{ gridTemplateColumns: '80px 1fr 120px 80px 180px' }}>
-                    <img src={c.thumbnail} alt="" style={{ width: 80, height: 50, borderRadius: '10px', objectFit: 'cover' }} />
-                    <div>
-                      <h4 style={{ fontWeight: 800 }}>{c.title}</h4>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        {c.price > 0 ? `${c.price}€` : 'Gratuit'} · {c.modules?.length || 0} module{(c.modules?.length || 0) !== 1 ? 's' : ''}
-                      </span>
+                {filteredCourses.map(c => {
+                  const meta = getCourseTechMeta(c);
+                  return (
+                    <div key={c.id} className="asset-row" style={{ gridTemplateColumns: '110px 1fr 120px 90px 180px' }}>
+                      <img
+                        src={getCourseCover(c)}
+                        alt={c.title}
+                        style={{ width: 100, height: 58, borderRadius: '12px', objectFit: 'cover', border: `1px solid ${meta.accent}44` }}
+                      />
+                      <div>
+                        <h4 style={{ fontWeight: 800 }}>{c.title}</h4>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          <span style={{ color: meta.accent, fontWeight: 800 }}>{meta.badge}</span> · {c.modules?.length || 0} module{(c.modules?.length || 0) !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#a78bfa' }}>{c.enrollments_count} élèves</div>
+                      <div style={{ color: '#4ade80', fontSize: '0.65rem', padding: '0.4rem', background: 'rgba(74,222,128,0.1)', borderRadius: '8px', textAlign: 'center', fontWeight: 800 }}>CERTIFIANT</div>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                        {/* Modules button */}
+                        <button
+                          className="admin-action-btn"
+                          title="Gérer les modules / vidéos"
+                          onClick={() => openModules(c)}
+                          style={{ color: '#a78bfa' }}
+                        >
+                          <Film size={18} />
+                        </button>
+                        <button className="admin-action-btn" onClick={() => { setSelectedCourse(c); setEditCourse({ title: c.title, description: c.description, thumbnail: c.thumbnail || '' }); setModalType('editCourse'); }}>
+                          <Edit size={18} />
+                        </button>
+                        <button className="admin-action-btn danger" onClick={() => api.delete(`/admin/courses/${c.id}`).then(fetchData)}>
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#a78bfa' }}>{c.enrollments_count} élèves</div>
-                    <div style={{ color: '#4ade80', fontSize: '0.65rem', padding: '0.4rem', background: 'rgba(74,222,128,0.1)', borderRadius: '8px', textAlign: 'center', fontWeight: 800 }}>ACTIF</div>
-                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                      {/* Modules button */}
-                      <button
-                        className="admin-action-btn"
-                        title="Gérer les modules / vidéos"
-                        onClick={() => openModules(c)}
-                        style={{ color: '#a78bfa' }}
-                      >
-                        <Film size={18} />
-                      </button>
-                      <button className="admin-action-btn" onClick={() => { setSelectedCourse(c); setEditCourse({ title: c.title, description: c.description, thumbnail: c.thumbnail, price: c.price }); setModalType('editCourse'); }}>
-                        <Edit size={18} />
-                      </button>
-                      <button className="admin-action-btn danger" onClick={() => api.delete(`/admin/courses/${c.id}`).then(fetchData)}>
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </motion.div>
             )}
 
@@ -409,46 +425,86 @@ const AdminPanel = () => {
             >
 
               {/* ── CREATE / EDIT COURSE ── */}
-              {(modalType === 'course' || modalType === 'editCourse') && (
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '2.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
-                    <h2 className="brand-font">{modalType === 'editCourse' ? 'Modifier le cours' : 'Nouveau Cours'}</h2>
-                    <button onClick={() => setModalType(null)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}><X size={24} /></button>
-                  </div>
-                  <form onSubmit={modalType === 'editCourse' ? handleEditCourse : handleCreateCourse} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>Titre</label>
-                      <input style={inputStyle}
-                        value={modalType === 'editCourse' ? editCourse.title : newCourse.title}
-                        onChange={e => modalType === 'editCourse' ? setEditCourse({ ...editCourse, title: e.target.value }) : setNewCourse({ ...newCourse, title: e.target.value })}
-                        required />
+              {(modalType === 'course' || modalType === 'editCourse') && (() => {
+                const activeCourseObj = modalType === 'editCourse' ? editCourse : newCourse;
+                const setActiveCourseObj = modalType === 'editCourse' ? setEditCourse : setNewCourse;
+                const generatedCover = getCourseCover(activeCourseObj);
+
+                return (
+                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card" style={{ width: '100%', maxWidth: '580px', padding: '2.25rem', maxHeight: '92vh', overflowY: 'auto' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                      <h2 className="brand-font">{modalType === 'editCourse' ? 'Modifier le cours' : 'Nouveau Cours Certifiant'}</h2>
+                      <button onClick={() => setModalType(null)} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}><X size={24} /></button>
                     </div>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>Description</label>
-                      <textarea style={{ ...inputStyle, minHeight: 90, resize: 'vertical' }}
-                        value={modalType === 'editCourse' ? editCourse.description : newCourse.description}
-                        onChange={e => modalType === 'editCourse' ? setEditCourse({ ...editCourse, description: e.target.value }) : setNewCourse({ ...newCourse, description: e.target.value })}
-                        required />
+
+                    {/* Live Course Cover Preview */}
+                    <div style={{ marginBottom: '1.25rem', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.12)', height: '175px', position: 'relative' }}>
+                      <img
+                        src={generatedCover}
+                        alt="Aperçu couverture"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                      <span style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(8,8,18,0.85)', color: '#4ade80', padding: '0.25rem 0.65rem', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 800, border: '1px solid rgba(74,222,128,0.3)' }}>
+                        Aperçu Couverture HD Auto
+                      </span>
                     </div>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>Image (URL)</label>
-                      <input style={inputStyle} placeholder="https://images.unsplash.com/..."
-                        value={modalType === 'editCourse' ? editCourse.thumbnail : newCourse.thumbnail}
-                        onChange={e => modalType === 'editCourse' ? setEditCourse({ ...editCourse, thumbnail: e.target.value }) : setNewCourse({ ...newCourse, thumbnail: e.target.value })}
-                        required />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>Prix (€)</label>
-                      <input style={inputStyle} type="number" min="0" step="0.01"
-                        value={modalType === 'editCourse' ? editCourse.price : newCourse.price}
-                        onChange={e => modalType === 'editCourse' ? setEditCourse({ ...editCourse, price: e.target.value }) : setNewCourse({ ...newCourse, price: e.target.value })} />
-                    </div>
-                    <button type="submit" className="btn-pro btn-pro-primary" style={{ marginTop: '0.5rem' }}>
-                      {modalType === 'editCourse' ? 'Enregistrer' : 'Publier le cours'}
-                    </button>
-                  </form>
-                </motion.div>
-              )}
+
+                    <form onSubmit={modalType === 'editCourse' ? handleEditCourse : handleCreateCourse} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+                      <div>
+                        <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.45rem' }}>Titre de la formation</label>
+                        <input style={inputStyle} placeholder="Ex: Java 21 LTS & Spring Boot Microservices"
+                          value={activeCourseObj.title}
+                          onChange={e => setActiveCourseObj({ ...activeCourseObj, title: e.target.value })}
+                          required />
+                      </div>
+
+                      {/* Quick Tech Cover Presets */}
+                      <div>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.45rem' }}>
+                          Thème Visuel &amp; Stack Technologique (clic rapide)
+                        </label>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                          {COURSE_COVER_PRESETS.map((p, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => setActiveCourseObj({
+                                ...activeCourseObj,
+                                title: activeCourseObj.title || p.title,
+                                thumbnail: getCourseCover({ title: activeCourseObj.title || p.title, description: p.label })
+                              })}
+                              style={{
+                                padding: '0.32rem 0.65rem', borderRadius: '8px', fontSize: '0.72rem', fontWeight: 700,
+                                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                                color: '#cbd5e1', cursor: 'pointer'
+                              }}
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.45rem' }}>Description du programme</label>
+                        <textarea style={{ ...inputStyle, minHeight: 85, resize: 'vertical' }}
+                          value={activeCourseObj.description}
+                          onChange={e => setActiveCourseObj({ ...activeCourseObj, description: e.target.value })}
+                          required />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.45rem' }}>Image personnalisée (optionnel — générée automatiquement selon le titre)</label>
+                        <input style={inputStyle} placeholder="Laisser vide pour utiliser la couverture HD automatique..."
+                          value={activeCourseObj.thumbnail}
+                          onChange={e => setActiveCourseObj({ ...activeCourseObj, thumbnail: e.target.value })} />
+                      </div>
+                      <button type="submit" className="btn-pro btn-pro-primary" style={{ marginTop: '0.4rem' }}>
+                        {modalType === 'editCourse' ? 'Enregistrer les modifications' : 'Publier la formation'}
+                      </button>
+                    </form>
+                  </motion.div>
+                );
+              })()}
 
               {/* ── MODULES MANAGER ── */}
               {modalType === 'modules' && moduleCourse && (

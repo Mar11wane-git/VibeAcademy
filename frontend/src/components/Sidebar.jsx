@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { BookOpen, LayoutGrid, MonitorPlay, Bookmark, Award, LogOut, ShieldCheck, Compass, Users, Calendar } from 'lucide-react';
+import { BookOpen, LayoutGrid, MonitorPlay, Bookmark, Award, LogOut, ShieldCheck, Compass, Users, Calendar, Info, MessageSquare } from 'lucide-react';
 import api from '../services/api';
 import { useApp } from '../context/AppContext';
 
@@ -19,6 +19,8 @@ const Sidebar = () => {
     { icon: <Calendar size={20} />, label: t('calendrier'), path: '/calendrier' },
     { icon: <Bookmark size={20} />, label: t('favoris'), path: '/favoris' },
     { icon: <Award size={20} />, label: t('certificats'), path: '/certificats' },
+    { icon: <Info size={20} />, label: 'À Propos', path: '/apropos' },
+    { icon: <MessageSquare size={20} />, label: 'Contact & Aide', path: '/contact' },
   ];
 
   if (user?.is_admin) {
@@ -38,7 +40,7 @@ const Sidebar = () => {
     <div className="sidebar">
       <div className="brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
         <div className="brand-icon"><BookOpen size={20} strokeWidth={2.5} /></div>
-        VibeAcademy
+        MR1Academy
       </div>
 
       <div className="nav-menu">

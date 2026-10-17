@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, LogIn, UserPlus, Mail, RotateCcw, CheckCircle2, ArrowLeft } from 'lucide-react';
@@ -197,7 +197,7 @@ const AuthPage = ({ mode = 'login' }) => {
 
         <div className="brand cursor-pointer" onClick={() => navigate('/')} style={{ position: 'absolute', top: '2rem', left: '3rem' }}>
           <div className="brand-icon"><BookOpen size={20} strokeWidth={2.5} /></div>
-          VibeAcademy
+          MR1Academy
         </div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="auth-card"
@@ -274,12 +274,12 @@ const AuthPage = ({ mode = 'login' }) => {
 
       <div className="brand cursor-pointer" onClick={() => navigate('/')} style={{ position: 'absolute', top: '2rem', left: '3rem' }}>
         <div className="brand-icon"><BookOpen size={20} strokeWidth={2.5} /></div>
-        VibeAcademy
+        MR1Academy
       </div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="auth-card">
         <h2 className="auth-title brand-font">
-          {mode === 'login' ? 'Heureux de vous revoir !' : 'Rejoindre VibeAcademy'}
+          {mode === 'login' ? 'Heureux de vous revoir !' : 'Rejoindre MR1Academy'}
         </h2>
 
         {error && (

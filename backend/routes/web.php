@@ -1,9 +1,9 @@
-<?php
+﻿<?php
 
 use Illuminate\Support\Facades\Route;
 
 Route::any('/api/test', function () {
-    return response()->json(['status' => 'ok', 'message' => 'VibeAcademy API is running!']);
+    return response()->json(['status' => 'ok', 'message' => 'MR1Academy API is running!']);
 });
 
 Route::get('/{any}', function () {

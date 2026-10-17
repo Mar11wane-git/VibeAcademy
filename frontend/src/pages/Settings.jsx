@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Settings as SettingsIcon, Bell, Globe, Moon, Shield, Save, CheckCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -32,7 +32,7 @@ const Settings = () => {
             className="page-view"
         >
             <h1 className="page-title brand-font">{t('parametres')}</h1>
-            <p className="page-subtitle">{lang === 'fr' ? 'Personnalisez votre expérience VibeAcademy.' : 'Personalize your VibeAcademy experience.'}</p>
+            <p className="page-subtitle">{lang === 'fr' ? 'Personnalisez votre expérience MR1Academy.' : 'Personalize your MR1Academy experience.'}</p>
 
             <div style={{ maxWidth: '600px' }}>
                 <div style={{ background: 'var(--bg-tertiary)', padding: '2.5rem', borderRadius: '24px', border: '1px solid var(--glass-border)' }}>

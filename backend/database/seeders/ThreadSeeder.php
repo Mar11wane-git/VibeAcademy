@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace Database\Seeders;
 
@@ -17,7 +17,7 @@ class ThreadSeeder extends Seeder
             ['Astuces pour réussir l\'examen React', 'React', 120],
             ['Quel est le meilleur moment pour utiliser Redux ?', 'Architecture', 45],
             ['Problème avec useEffect : boucle infinie', 'Entraide', 15],
-            ['Voici mon portfolio après 3 mois sur VibeAcademy !', 'Showcase', 300]
+            ['Voici mon portfolio après 3 mois sur MR1Academy !', 'Showcase', 300]
         ];
 
         foreach($threads as $t) {

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Mail;
 
@@ -24,7 +24,7 @@ class VerificationCodeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '🎓 VibeAcademy — Votre code de vérification',
+            subject: '🎓 MR1Academy — Votre code de vérification',
         );
     }
 
