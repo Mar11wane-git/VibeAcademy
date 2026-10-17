@@ -64,8 +64,10 @@ const ContactPage = () => {
   const [tickets, setTickets] = useState(() => {
     try {
       const local = JSON.parse(localStorage.getItem(LOCAL_TICKETS_KEY) || '[]');
-      const cached = getCachedData('/contact/tickets') || [];
-      return cached.length ? cached : local;
+      const cached = getCachedData('/contact/tickets');
+      if (Array.isArray(cached) && cached.length > 0) return cached;
+      if (Array.isArray(local)) return local;
+      return [];
     } catch {
       return [];
     }
@@ -75,8 +77,10 @@ const ContactPage = () => {
     if (localStorage.getItem('token')) {
       api.get('/contact/tickets')
         .then(res => {
-          if (Array.isArray(res.data) && res.data.length > 0) {
+          if (Array.isArray(res.data)) {
             setTickets(res.data);
+          } else if (res.data?.tickets && Array.isArray(res.data.tickets)) {
+            setTickets(res.data.tickets);
           }
         })
         .catch(() => {});
@@ -393,15 +397,15 @@ const ContactPage = () => {
           </form>
 
           {/* Submitted Tickets History */}
-          {tickets.length > 0 && (
+          {Array.isArray(tickets) && tickets.length > 0 && (
             <div style={{ marginTop: '1.75rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <h3 className="brand-font" style={{ fontSize: '0.98rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                 <FileCheck size={16} color="#4ade80" /> Vos Tickets Support Récents ({tickets.length})
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', maxHeight: '220px', overflowY: 'auto' }}>
-                {tickets.map((t, idx) => (
+                {(Array.isArray(tickets) ? tickets : []).map((t, idx) => (
                   <div
-                    key={t.id || idx}
+                    key={t?.id || t?.ticket_ref || idx}
                     style={{
                       background: 'var(--bg-tertiary)', border: '1px solid rgba(255,255,255,0.07)',
                       borderRadius: '12px', padding: '0.75rem 0.95rem',
@@ -411,12 +415,12 @@ const ContactPage = () => {
                     <div style={{ minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span style={{ fontFamily: 'monospace', fontSize: '0.73rem', fontWeight: 800, color: '#a78bfa' }}>
-                          #{t.ticket_ref}
+                          #{t?.ticket_ref || 'MR1-TICK'}
                         </span>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>• {t.category}</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>• {t?.category || 'Support'}</span>
                       </div>
                       <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {t.subject}
+                        {t?.subject}
                       </div>
                     </div>
                     <span style={{
@@ -424,7 +428,7 @@ const ContactPage = () => {
                       background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)',
                       padding: '0.22rem 0.6rem', borderRadius: '999px', flexShrink: 0
                     }}>
-                      {t.status || 'Reçu'}
+                      {t?.status || 'Reçu'}
                     </span>
                   </div>
                 ))}
