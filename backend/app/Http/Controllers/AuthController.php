@@ -1,5 +1,8 @@
-﻿<?php
+<?php
 
+/**
+ * MR1Academy Auth Controller
+ */
 namespace App\Http\Controllers;
 
 use App\Models\User;

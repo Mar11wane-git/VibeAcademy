@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { BookOpen, LayoutGrid, MonitorPlay, Bookmark, Award, LogOut, ShieldCheck, Compass, Users, Calendar, Info, MessageSquare } from 'lucide-react';
 import api from '../services/api';
@@ -30,7 +30,7 @@ const Sidebar = () => {
   }
 
   const handleLogout = async () => {
-    try { await api.post('/logout'); } catch { }
+    try { await api.post('/logout'); } catch { /* ignore logout API failure; clear local session anyway */ }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/');

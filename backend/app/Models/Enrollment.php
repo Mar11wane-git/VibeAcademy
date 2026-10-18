@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * MR1Academy Enrollment Model
+ */
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;

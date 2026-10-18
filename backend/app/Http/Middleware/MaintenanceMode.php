@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * MR1Academy MaintenanceMode Middleware
+ */
 namespace App\Http\Middleware;
 
 use Closure;

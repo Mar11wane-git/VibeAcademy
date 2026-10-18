@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * MR1Academy Favorite Controller
+ */
 namespace App\Http\Controllers;
 
 use App\Models\Course;

@@ -19,10 +19,19 @@ import {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [courses, setCourses] = useState(() => getCachedData('/courses') || []);
-  const [enrollments, setEnrollments] = useState(() => getCachedData('/my-courses') || []);
-  const [agendaEvents, setAgendaEvents] = useState(() => (getCachedData('/agenda/events') || []).slice(0, 3));
-  const [loading, setLoading] = useState(() => !getCachedData('/courses'));
+  const [courses, setCourses] = useState(() => {
+    const c = getCachedData('/courses');
+    return Array.isArray(c) ? c : [];
+  });
+  const [enrollments, setEnrollments] = useState(() => {
+    const e = getCachedData('/my-courses');
+    return Array.isArray(e) ? e : [];
+  });
+  const [agendaEvents, setAgendaEvents] = useState(() => {
+    const a = getCachedData('/agenda/events');
+    return Array.isArray(a) ? a.slice(0, 3) : [];
+  });
+  const [loading, setLoading] = useState(() => !Array.isArray(getCachedData('/courses')));
   const [errorStatus, setErrorStatus] = useState(null);
 
   const getUser = () => {
@@ -46,14 +55,14 @@ const Dashboard = () => {
           api.get('/my-courses').catch(() => ({ data: [] })),
           api.get('/agenda/events').catch(() => ({ data: [] })),
         ]);
-        setCourses(coursesRes.data || []);
-        setEnrollments(myCoursesRes.data || []);
+        setCourses(Array.isArray(coursesRes.data) ? coursesRes.data : []);
+        setEnrollments(Array.isArray(myCoursesRes.data) ? myCoursesRes.data : []);
         if (Array.isArray(agendaRes.data) && agendaRes.data.length > 0) {
           setAgendaEvents(agendaRes.data.slice(0, 3));
         } else {
           try {
             const localAg = JSON.parse(localStorage.getItem('vibe_agenda_events_v2') || '[]');
-            setAgendaEvents(localAg.slice(0, 3));
+            setAgendaEvents(Array.isArray(localAg) ? localAg.slice(0, 3) : []);
           } catch { /* ignore */ }
         }
       } catch (err) {
@@ -70,9 +79,11 @@ const Dashboard = () => {
 
   // Normalize and enrich enrollments with real course objects, playlist stats, and next module
   const enrichedEnrollments = useMemo(() => {
-    return enrollments
+    const safeEnrollments = Array.isArray(enrollments) ? enrollments : [];
+    const safeCourses = Array.isArray(courses) ? courses : [];
+    return safeEnrollments
       .map(e => {
-        const courseObj = e.course || courses.find(c => Number(c.id) === Number(e.course_id || e.id));
+        const courseObj = e.course || safeCourses.find(c => Number(c.id) === Number(e.course_id || e.id));
         if (!courseObj) return null;
 
         const sortedModules = [...(courseObj.modules || [])].sort((a, b) => a.order - b.order);

@@ -1,5 +1,8 @@
-﻿<?php
+<?php
 
+/**
+ * MR1Academy Community Controller
+ */
 namespace App\Http\Controllers;
 
 use App\Models\Thread;

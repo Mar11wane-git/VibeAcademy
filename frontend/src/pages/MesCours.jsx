@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -23,16 +23,19 @@ const statusConfig = (progress, isCertified) => {
 
 const MesCours = () => {
   const navigate = useNavigate();
-  const [enrollments, setEnrollments] = useState(() => getCachedData('/my-courses') || []);
-  const [loading, setLoading] = useState(() => !getCachedData('/my-courses'));
+  const [enrollments, setEnrollments] = useState(() => {
+    const e = getCachedData('/my-courses');
+    return Array.isArray(e) ? e : [];
+  });
+  const [loading, setLoading] = useState(() => !Array.isArray(getCachedData('/my-courses')));
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     const fetchMyCourses = async () => {
-      if (!enrollments.length) setLoading(true);
+      if (!Array.isArray(enrollments) || !enrollments.length) setLoading(true);
       try {
         const res = await api.get('/my-courses');
-        setEnrollments(res.data || []);
+        setEnrollments(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error('Erreur chargement mes cours:', err);
       } finally {
@@ -45,8 +48,9 @@ const MesCours = () => {
   const localCerts = getAllLocalCertificates();
 
   const enriched = useMemo(() => {
-    return enrollments
-      .filter(e => e.course)
+    const safeEnrollments = Array.isArray(enrollments) ? enrollments : [];
+    return safeEnrollments
+      .filter(e => e && e.course)
       .map(e => {
         const course = e.course;
         const modules = course.modules || [];

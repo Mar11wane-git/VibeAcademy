@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Settings as SettingsIcon, Bell, Globe, Moon, Shield, Save, CheckCircle } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -14,10 +14,6 @@ const Settings = () => {
     const toggle = (field) => {
         setPreferences({ ...preferences, [field]: !preferences[field] });
     };
-
-    const handleChange = (e) => {
-        setPreferences({ ...preferences, [field]: e.target.value });
-    }
 
     const saveSettings = (e) => {
         e.preventDefault();

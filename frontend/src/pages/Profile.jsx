@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -44,7 +44,7 @@ const CAREER_TRACKS = [
 ];
 
 const Profile = () => {
-  const { t, lang } = useApp();
+  const { t } = useApp();
   const navigate = useNavigate();
 
   const storedUser = useMemo(() => {

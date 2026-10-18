@@ -47,15 +47,25 @@ const Favoris = () => {
   const navigate = useNavigate();
 
   // ── Instant SWR + Local Cache Hydration ──
-  const [allCourses, setAllCourses] = useState(() => getCachedData('/courses') || []);
-  const [serverFavorites, setServerFavorites] = useState(() => getCachedData('/favorites') || []);
-  const [enrollments, setEnrollments] = useState(() => getCachedData('/my-courses') || []);
+  const [allCourses, setAllCourses] = useState(() => {
+    const c = getCachedData('/courses');
+    return Array.isArray(c) ? c : [];
+  });
+  const [serverFavorites, setServerFavorites] = useState(() => {
+    const f = getCachedData('/favorites');
+    return Array.isArray(f) ? f : [];
+  });
+  const [enrollments, setEnrollments] = useState(() => {
+    const e = getCachedData('/my-courses');
+    return Array.isArray(e) ? e : [];
+  });
   const [favIds, setFavIds] = useState(() => {
-    const serverIds = (getCachedData('/favorites') || []).map(f => Number(f.id));
+    const f = getCachedData('/favorites');
+    const serverIds = (Array.isArray(f) ? f : []).map(item => Number(item.id));
     return Array.from(new Set([...serverIds, ...getLocalFavoriteIds()]));
   });
   const [metaVersion, setMetaVersion] = useState(0);
-  const [loading, setLoading] = useState(() => !getCachedData('/courses') && !getCachedData('/favorites'));
+  const [loading, setLoading] = useState(() => !Array.isArray(getCachedData('/courses')) && !Array.isArray(getCachedData('/favorites')));
 
   // ── UI Filter & View State ──
   const [activeTab, setActiveTab] = useState('all');

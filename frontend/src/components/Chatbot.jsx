@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Send, Bot, Sparkles, Maximize2, Minimize2,
@@ -275,7 +275,7 @@ const Chatbot = () => {
     const trimmed = (queryText || '').trim();
     if (!trimmed || isTyping) return;
 
-    const userMsg = { id: Date.now(), text: trimmed, sender: 'user' };
+    const userMsg = { id: crypto.randomUUID(), text: trimmed, sender: 'user' };
     const updatedHistory = [...messages, userMsg];
     setMessages(updatedHistory);
     setInput('');

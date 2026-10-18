@@ -1,5 +1,8 @@
-﻿<?php
+<?php
 
+/**
+ * MR1Academy Enrollment Controller
+ */
 namespace App\Http\Controllers;
 
 use App\Models\Enrollment;

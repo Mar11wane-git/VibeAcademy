@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -10,7 +10,6 @@ import api, { getCachedData } from '../services/api';
 import {
   computePlaylistStats,
   parseDurationToSeconds,
-  formatSecondsHuman,
   formatDurationClock,
   getRealYouTubeDurations,
   saveRealYouTubeDuration,
@@ -674,7 +673,7 @@ const CoursePlayer = () => {
                 }}
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: '#000' }}
               >
-                <source src={activeModule.video_url.startsWith('http') ? activeModule.video_url : `http://127.0.0.1:8000/storage/${activeModule.video_url}`} />
+                <source src={activeModule.video_url.startsWith('http') ? activeModule.video_url : `${(import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api').replace(/\/api\/?$/, '')}/storage/${activeModule.video_url}`} />
                 Votre navigateur ne supporte pas la lecture vidéo.
               </video>
             ) : (

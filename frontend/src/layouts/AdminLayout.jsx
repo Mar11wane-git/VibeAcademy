@@ -17,10 +17,6 @@ const AdminLayout = ({ children }) => {
   const [unread, setUnread] = useState(0);
   const bellRef = useRef(null);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
   const fetchNotifications = async () => {
     try {
       const res = await api.get('/admin/stats');
@@ -38,8 +34,13 @@ const AdminLayout = ({ children }) => {
         list.push({ id: 5, icon: 'check', text: 'Tout est en ordre. Aucune alerte active.', time: 'Maintenant', read: true });
       setNotifs(list);
       setUnread(list.filter(n => !n.read).length);
-    } catch {}
+    } catch { /* notifications are optional; ignore failures */ }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchNotifications();
+  }, []);
 
   const markAllRead = () => {
     setNotifs(prev => prev.map(n => ({ ...n, read: true })));

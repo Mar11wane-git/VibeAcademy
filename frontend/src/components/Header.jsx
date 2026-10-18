@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Search, Bell, User, Settings, LogOut, Award, BookOpen,
@@ -156,33 +156,35 @@ const NotificationsPanel = ({ user, notes, setNotes, onOpenNote, onNavigate, onC
   const { lang } = useApp();
   const [activeFilter, setActiveFilter] = useState('all');
 
+  const safeNotes = Array.isArray(notes) ? notes : [];
+
   const handleMarkAllRead = () => {
     const updated = markAllNotificationsRead(user?.id);
-    setNotes(updated);
+    setNotes(Array.isArray(updated) ? updated : []);
   };
 
   const handleMarkAsRead = (id) => {
     const updated = markNotificationRead(id, user?.id);
-    setNotes(updated);
+    setNotes(Array.isArray(updated) ? updated : []);
   };
 
   const handleDelete = (e, id) => {
     e.stopPropagation();
     const updated = deleteNotification(id, user?.id);
-    setNotes(updated);
+    setNotes(Array.isArray(updated) ? updated : []);
   };
 
-  const unreadCount = notes.filter(n => !n.read).length;
+  const unreadCount = safeNotes.filter(n => !n.read).length;
 
   const filterTabs = [
-    { key: 'all', label: `Toutes (${notes.length})` },
+    { key: 'all', label: `Toutes (${safeNotes.length})` },
     { key: 'unread', label: `Non lues (${unreadCount})` },
     { key: 'academique', label: 'Cours & Certifs' },
     { key: 'agenda', label: 'Agenda' },
     { key: 'social', label: 'Communauté & Favoris' },
   ];
 
-  const filteredNotes = notes.filter(n => {
+  const filteredNotes = safeNotes.filter(n => {
     if (activeFilter === 'unread') return !n.read;
     if (activeFilter === 'academique') return ['course', 'enrollment', 'greenlight', 'certificate', 'system', 'welcome'].includes(n.type);
     if (activeFilter === 'agenda') return n.type === 'agenda' || n.category === 'agenda';
@@ -449,7 +451,15 @@ const Header = () => {
   };
   const [user, setUser] = useState(getUser);
 
-  const [userNotes, setUserNotes] = useState([]);
+  const [userNotes, setUserNotes] = useState(() => {
+    try {
+      const currentUser = getUser();
+      const notes = currentUser?.id ? getNotifications(currentUser.id) : [];
+      return Array.isArray(notes) ? notes : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Sync notifications & user profile updates in real time
   useEffect(() => {
@@ -457,7 +467,8 @@ const Header = () => {
       const currentUser = getUser();
       setUser(currentUser);
       if (currentUser?.id) {
-        setUserNotes(getNotifications(currentUser.id));
+        const fetched = getNotifications(currentUser.id);
+        setUserNotes(Array.isArray(fetched) ? fetched : []);
       }
     };
 
@@ -476,7 +487,7 @@ const Header = () => {
     };
   }, [location.pathname]);
 
-  const unread = userNotes.filter(n => !n.read).length;
+  const unread = Array.isArray(userNotes) ? userNotes.filter(n => !n.read).length : 0;
 
   useEffect(() => {
     const handler = (e) => {
@@ -503,7 +514,8 @@ const Header = () => {
   const toggleNotifs = () => {
     if (!showNotifs) {
       syncSmartNotifications();
-      setUserNotes(getNotifications(user?.id));
+      const fetched = getNotifications(user?.id);
+      setUserNotes(Array.isArray(fetched) ? fetched : []);
     }
     setShowNotifs(p => !p);
     setShowProfile(false);
@@ -511,13 +523,29 @@ const Header = () => {
   };
   const toggleProfile = () => { setShowProfile(p => !p); setShowNotifs(false); setShowSearchResults(false); };
 
-  const [allCourses, setAllCourses] = useState(() => getCachedData('/courses') || []);
+  const [allCourses, setAllCourses] = useState(() => {
+    try {
+      const cached = getCachedData('/courses');
+      return Array.isArray(cached) ? cached : [];
+    } catch {
+      return [];
+    }
+  });
+
   useEffect(() => {
-    api.get('/courses').then(res => setAllCourses(res.data || [])).catch(() => {});
+    api.get('/courses')
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          setAllCourses(res.data);
+        }
+      })
+      .catch(() => {});
   }, []);
 
+  const safeCourses = Array.isArray(allCourses) ? allCourses : [];
+
   const searchItems = [
-    ...allCourses.map(c => ({ id: `course-${c.id}`, type: 'course', badge: 'COURS', title: c.title, path: `/courses/${c.id}` })),
+    ...safeCourses.map(c => ({ id: `course-${c.id}`, type: 'course', badge: 'COURS', title: c.title, path: `/courses/${c.id}` })),
     { id: 'page-dash', type: 'page', badge: 'ACCUEIL', title: 'Tableau de Bord Principal', path: '/dashboard' },
     { id: 'page-cat', type: 'page', badge: '24 CURSUS', title: 'Catalogue des Formations (IA, Data, Cloud, Web)', path: '/catalogue' },
     { id: 'page-agenda', type: 'page', badge: 'LIVE .ICS', title: 'Agenda & Sessions Live RFC 5545', path: '/calendrier' },

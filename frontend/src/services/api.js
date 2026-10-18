@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Use 127.0.0.1 instead of localhost to avoid Windows IPv6 (::1) 300ms-2000ms DNS/TCP fallback delay
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api',
   timeout: 8000,
   headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
 });
@@ -11,7 +11,18 @@ const api = axios.create({
 const memoryCache = new Map();
 const inFlightRequests = new Map();
 const CACHE_TTL_MS = 20000; // 20 seconds fresh window
-const STORAGE_PREFIX = 'vibe_api_swr_v4:';
+const STORAGE_PREFIX = 'mr1_api_swr_v5:';
+
+// Auto-clean legacy corrupted caches on boot
+if (typeof window !== 'undefined') {
+  try {
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('vibe_api_swr_') || k.startsWith('vibe_contact_') || k.startsWith('vibe_tickets')) {
+        localStorage.removeItem(k);
+      }
+    });
+  } catch { /* ignore */ }
+}
 
 function normalizeCacheKey(url, config = {}) {
   const cleanUrl = String(url || '').replace(/^\/+/, '/');
@@ -24,12 +35,19 @@ export function getCachedData(url, fallback = null) {
   try {
     const key = normalizeCacheKey(url);
     const mem = memoryCache.get(key);
-    if (mem && mem.data !== undefined) return mem.data;
+    if (mem && mem.data !== undefined) {
+      if (url.includes('courses') && !Array.isArray(mem.data)) return fallback;
+      return mem.data;
+    }
 
     const raw = localStorage.getItem(STORAGE_PREFIX + key);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.data !== undefined) {
+        if (url.includes('courses') && !Array.isArray(parsed.data)) {
+          localStorage.removeItem(STORAGE_PREFIX + key);
+          return fallback;
+        }
         memoryCache.set(key, { data: parsed.data, timestamp: parsed.timestamp || 0 });
         return parsed.data;
       }
@@ -39,6 +57,7 @@ export function getCachedData(url, fallback = null) {
 }
 
 function setCachedData(key, data) {
+  if (!data || data.exception || (data.message && !data.id && !Array.isArray(data))) return;
   const entry = { data, timestamp: Date.now() };
   memoryCache.set(key, entry);
   try {
@@ -50,7 +69,7 @@ export function invalidateApiCache() {
   memoryCache.clear();
   try {
     Object.keys(localStorage).forEach(k => {
-      if (k.startsWith(STORAGE_PREFIX)) {
+      if (k.startsWith(STORAGE_PREFIX) || k.startsWith('vibe_api_swr_')) {
         localStorage.removeItem(k);
       }
     });
