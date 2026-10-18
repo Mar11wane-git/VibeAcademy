@@ -13,9 +13,14 @@ const AdminLayout = ({ children }) => {
   const location = useLocation();
   const { user, logout } = useApp();
   const [showNotif, setShowNotif] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifs, setNotifs] = useState([]);
   const [unread, setUnread] = useState(0);
   const bellRef = useRef(null);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const fetchNotifications = async () => {
     try {
@@ -72,8 +77,20 @@ const AdminLayout = ({ children }) => {
   };
 
   return (
-    <div className="admin-layout">
-      <aside className="admin-sidebar">
+    <div className={`admin-layout ${sidebarOpen ? 'menu-open' : ''}`}>
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 99,
+          }}
+        />
+      )}
+      <aside className="admin-sidebar" style={{ zIndex: 100 }}>
         <div className="admin-brand" onClick={() => navigate('/')}>
           <div className="brand-logo"><ShieldCheck size={24} /></div>
           <span>VibeCommand</span>
@@ -105,7 +122,7 @@ const AdminLayout = ({ children }) => {
       <div className="admin-main">
         <header className="admin-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1 }}>
-            <Menu size={22} className="desktop-hide" />
+            <Menu size={22} className="desktop-hide" onClick={() => setSidebarOpen(p => !p)} />
             <div className="admin-search-bar">
               <Search size={18} />
               <input type="text" placeholder="Rechercher cours, apprenants, logs..." />

@@ -1,9 +1,10 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, Play, ChevronRight, GraduationCap, Award,
-  Sparkles, Users, CheckCircle, Shield, ListVideo, Bot, Calendar
+  Sparkles, Users, CheckCircle, Shield, ListVideo, Bot, Calendar,
+  Menu, X
 } from 'lucide-react';
 import { getCourseCover, COURSE_COVER_PRESETS } from '../utils/certificationEngine';
 import Footer from '../components/Footer';
@@ -11,6 +12,8 @@ import VibeLogo from '../components/VibeLogo';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+
+  const [menuOpen, setMenuOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (localStorage.getItem('token') && localStorage.getItem('user')) {
@@ -27,7 +30,7 @@ const LandingPage = () => {
       <nav className="top-nav">
         <VibeLogo size={40} onClick={() => navigate('/')} />
 
-        <div className="nav-links">
+        <div className="nav-links landing-nav-desktop">
           <a href="#hero" className="nav-link">Accueil</a>
           <a href="#courses-showcase" className="nav-link">Formations (24)</a>
           <a href="#features" className="nav-link">Technologie</a>
@@ -55,6 +58,81 @@ const LandingPage = () => {
             </button>
           </div>
         </div>
+
+        {/* Mobile Hamburger Button */}
+        <button
+          className="landing-mobile-toggle"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle navigation"
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid var(--glass-border)',
+            borderRadius: '12px',
+            width: 42,
+            height: 42,
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            cursor: 'pointer',
+            display: 'none',
+          }}
+        >
+          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+
+        {/* Mobile Navigation Drawer */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              style={{
+                position: 'fixed',
+                top: '70px',
+                left: 0,
+                right: 0,
+                background: 'rgba(6, 6, 14, 0.98)',
+                backdropFilter: 'blur(25px)',
+                WebkitBackdropFilter: 'blur(25px)',
+                borderBottom: '1px solid var(--glass-border)',
+                padding: '1.5rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1rem',
+                zIndex: 999,
+              }}
+            >
+              <a href="#hero" onClick={() => setMenuOpen(false)} className="nav-link" style={{ fontSize: '1.05rem', padding: '0.4rem 0' }}>Accueil</a>
+              <a href="#courses-showcase" onClick={() => setMenuOpen(false)} className="nav-link" style={{ fontSize: '1.05rem', padding: '0.4rem 0' }}>Formations (24)</a>
+              <a href="#features" onClick={() => setMenuOpen(false)} className="nav-link" style={{ fontSize: '1.05rem', padding: '0.4rem 0' }}>Technologie</a>
+              <a href="#certifications" onClick={() => setMenuOpen(false)} className="nav-link" style={{ fontSize: '1.05rem', padding: '0.4rem 0' }}>Certifications</a>
+              <button
+                onClick={() => { navigate('/apropos'); setMenuOpen(false); }}
+                className="nav-link"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1.05rem', textAlign: 'left', padding: '0.4rem 0' }}
+              >
+                À Propos
+              </button>
+              <button
+                onClick={() => { navigate('/contact'); setMenuOpen(false); }}
+                className="nav-link"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '1.05rem', textAlign: 'left', padding: '0.4rem 0' }}
+              >
+                Contact
+              </button>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <button className="btn-pro btn-pro-outline" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { navigate('/login'); setMenuOpen(false); }}>
+                  Se Connecter
+                </button>
+                <button className="btn-pro btn-pro-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { navigate('/register'); setMenuOpen(false); }}>
+                  Commencer Maintenant <ChevronRight size={18} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* Hero Section */}

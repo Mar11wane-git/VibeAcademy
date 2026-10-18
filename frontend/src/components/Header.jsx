@@ -4,7 +4,8 @@ import {
   Search, Bell, User, Settings, LogOut, Award, BookOpen,
   ChevronDown, Check, Info, Sparkles, X, LayoutGrid, Compass,
   MonitorPlay, Users, Calendar, Bookmark, MessageSquare, ShieldCheck,
-  Heart, Trash2, ExternalLink, CheckCircle2
+  Heart, Trash2, ExternalLink, CheckCircle2,
+  Menu, Moon, Sun, Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -428,15 +429,22 @@ const ProfileDropdown = ({ user, onClose }) => {
 
 // ── Main Full-Width Enterprise Header ───────────────────────────────────────
 const Header = () => {
-  const { t, lang } = useApp();
+  const { t, lang, theme, toggleTheme, changeLang, logout } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setShowNotifs(false);
+    setShowProfile(false);
+  }, [location.pathname]);
 
   const notifsRef = useRef(null);
   const profileRef = useRef(null);
@@ -607,6 +615,7 @@ const Header = () => {
 
       {/* 2. Center: Unified Single-Line Navigation Pill Bar */}
       <nav
+        className="header-nav-desktop"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -672,7 +681,7 @@ const Header = () => {
       {/* 3. Right: Compact Search (Ctrl+K) + Notifications + Profile */}
       <div className="profile-area" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexShrink: 0 }}>
         {/* Search Input with Ctrl+K */}
-        <div ref={searchRef} style={{ position: 'relative' }}>
+        <div ref={searchRef} className="header-search-wrap" style={{ position: 'relative' }}>
           <div
             style={{
               width: showSearchResults ? 245 : 195,
@@ -857,6 +866,29 @@ const Header = () => {
           </button>
           {showProfile && <ProfileDropdown user={user} onClose={() => setShowProfile(false)} />}
         </div>
+
+        {/* 4. Mobile Hamburger Button */}
+        <button
+          className="header-mobile-toggle"
+          onClick={() => setMobileMenuOpen(prev => !prev)}
+          aria-label="Toggle navigation"
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: '12px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid var(--glass-border)',
+            display: 'none',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            cursor: 'pointer',
+            flexShrink: 0,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
       </div>
 
       <NotificationDetailModal
@@ -864,6 +896,214 @@ const Header = () => {
         onClose={() => setSelectedNotif(null)}
         onNavigate={(url) => navigate(url)}
       />
+
+      {/* Mobile Navigation Drawer */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="mobile-header-drawer"
+            style={{
+              position: 'fixed',
+              top: '78px',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(7, 7, 18, 0.98)',
+              backdropFilter: 'blur(28px)',
+              WebkitBackdropFilter: 'blur(28px)',
+              zIndex: 9999,
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '1.25rem 1.25rem 2.5rem',
+              overflowY: 'auto',
+              borderTop: '1px solid var(--glass-border)',
+            }}
+          >
+            {/* Mobile Search */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <div
+                style={{
+                  height: '46px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--glass-border)',
+                  borderRadius: '14px',
+                  padding: '0 0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.65rem',
+                }}
+              >
+                <Search size={18} color="var(--text-muted)" />
+                <input
+                  type="text"
+                  placeholder={t('search') || 'Rechercher un cours...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: '#fff',
+                    fontSize: '0.95rem',
+                    width: '100%',
+                  }}
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)' }}>
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+              {searchQuery.trim() && searchResults.length > 0 && (
+                <div style={{ marginTop: '0.5rem', background: 'var(--bg-secondary)', borderRadius: '12px', padding: '0.5rem', border: '1px solid var(--glass-border)', maxHeight: 220, overflowY: 'auto' }}>
+                  {searchResults.slice(0, 5).map(res => (
+                    <div
+                      key={res.id}
+                      onClick={() => {
+                        navigate(res.path);
+                        setMobileMenuOpen(false);
+                      }}
+                      style={{ padding: '0.6rem 0.8rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.6rem', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                    >
+                      <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', background: 'rgba(112,0,255,0.2)', color: '#a78bfa', fontWeight: 800 }}>{res.badge}</span>
+                      <span style={{ fontSize: '0.85rem', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{res.title}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Nav Links Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.45rem', marginBottom: '1.5rem' }}>
+              {navLinks.map(item => {
+                const isActive = item.match
+                  ? item.match.includes(currentPath)
+                  : currentPath === item.path || (item.path !== '/' && currentPath.startsWith(item.path + '/'));
+
+                return (
+                  <button
+                    key={item.path}
+                    onClick={() => {
+                      navigate(item.path);
+                      setMobileMenuOpen(false);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.85rem',
+                      width: '100%',
+                      padding: '0.85rem 1rem',
+                      borderRadius: '14px',
+                      background: isActive ? 'linear-gradient(135deg, rgba(112, 0, 255, 0.28), rgba(0, 209, 255, 0.15))' : 'rgba(255, 255, 255, 0.03)',
+                      border: isActive ? '1px solid rgba(167, 139, 250, 0.5)' : '1px solid rgba(255, 255, 255, 0.05)',
+                      color: isActive ? '#ffffff' : 'var(--text-muted)',
+                      fontSize: '0.95rem',
+                      fontWeight: isActive ? 800 : 600,
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{ color: isActive ? '#00d1ff' : '#a78bfa', display: 'flex' }}>
+                      {React.cloneElement(item.icon, { size: 19 })}
+                    </span>
+                    <span style={{ flex: 1 }}>{item.label}</span>
+                    {isActive && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#00d1ff' }} />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Quick Actions: Theme & Lang */}
+            <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <button
+                onClick={toggleTheme}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--glass-border)',
+                  color: 'white',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {theme === 'dark' ? <Sun size={17} color="#fbbf24" /> : <Moon size={17} color="#a78bfa" />}
+                <span>{theme === 'dark' ? 'Mode Clair' : 'Mode Sombre'}</span>
+              </button>
+
+              <button
+                onClick={() => changeLang(lang === 'fr' ? 'en' : 'fr')}
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid var(--glass-border)',
+                  color: 'white',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                <Globe size={17} color="#38bdf8" />
+                <span>{lang === 'fr' ? 'English (EN)' : 'Français (FR)'}</span>
+              </button>
+            </div>
+
+            {/* Profile & Logout */}
+            <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ width: 38, height: 38, borderRadius: '10px', background: 'var(--gradient-magic)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: 'white' }}>
+                    {user?.name?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                  <div>
+                    <p style={{ color: 'white', fontWeight: 700, fontSize: '0.9rem', lineHeight: 1.2 }}>{user?.name || 'Étudiant'}</p>
+                    <p style={{ color: '#4ade80', fontSize: '0.75rem', fontWeight: 600 }}>{user?.is_admin ? 'Admin' : 'Membre'}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    logout();
+                    navigate('/');
+                    setMobileMenuOpen(false);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    padding: '0.6rem 0.9rem',
+                    borderRadius: '10px',
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#f87171',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <LogOut size={16} />
+                  <span>Déconnexion</span>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 };

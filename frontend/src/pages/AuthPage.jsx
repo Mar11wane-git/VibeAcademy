@@ -202,7 +202,7 @@ const AuthPage = ({ mode = 'login' }) => {
       <div className="auth-page">
         <div className="orb-1" /><div className="orb-2" />
 
-        <div className="brand cursor-pointer" onClick={() => navigate('/')} style={{ position: 'absolute', top: '2rem', left: '3rem' }}>
+        <div className="brand cursor-pointer auth-brand-header" onClick={() => navigate('/')}>
           <div className="brand-icon"><BookOpen size={20} strokeWidth={2.5} /></div>
           MR1Academy
         </div>
@@ -279,7 +279,7 @@ const AuthPage = ({ mode = 'login' }) => {
     <div className="auth-page">
       <div className="orb-1" /><div className="orb-2" />
 
-      <div className="brand cursor-pointer" onClick={() => navigate('/')} style={{ position: 'absolute', top: '2rem', left: '3rem' }}>
+      <div className="brand cursor-pointer auth-brand-header" onClick={() => navigate('/')}>
         <div className="brand-icon"><BookOpen size={20} strokeWidth={2.5} /></div>
         MR1Academy
       </div>
