@@ -3,7 +3,7 @@ import axios from 'axios';
 // Use 127.0.0.1 instead of localhost to avoid Windows IPv6 (::1) 300ms-2000ms DNS/TCP fallback delay
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api',
-  timeout: 8000,
+  timeout: 25000,
   headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
 });
 

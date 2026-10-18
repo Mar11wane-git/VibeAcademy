@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, LogIn, UserPlus, Mail, RotateCcw, CheckCircle2, ArrowLeft } from 'lucide-react';
@@ -124,6 +124,9 @@ const AuthPage = ({ mode = 'login' }) => {
       // Register → needs verification
       if (res.data.needs_verification) {
         setPendingEmail(res.data.email);
+        if (res.data.code) {
+          setOtpCode(res.data.code);
+        }
         setStep('verify');
         return;
       }
@@ -178,8 +181,12 @@ const AuthPage = ({ mode = 'login' }) => {
     setError('');
     setCodeExpired(false);
     try {
-      await api.post('/resend-code', { email: pendingEmail });
-      setOtpCode('');
+      const res = await api.post('/resend-code', { email: pendingEmail });
+      if (res.data.code) {
+        setOtpCode(res.data.code);
+      } else {
+        setOtpCode('');
+      }
       setResendSuccess(true);
       setTimeout(() => setResendSuccess(false), 4000);
     } catch (err) {

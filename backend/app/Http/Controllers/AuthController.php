@@ -46,16 +46,20 @@ class AuthController extends Controller
         ]);
 
         // Send verification email
+        $mailSent = false;
         try {
             Mail::to($user->email)->send(new VerificationCodeMail($code, $user->name));
-        } catch (\Exception $e) {
-            // Log error but don't block — code is stored in DB
+            $mailSent = true;
+        } catch (\Throwable $e) {
             \Log::error('Mail send failed: ' . $e->getMessage());
         }
 
         return response()->json([
-            'message'    => 'Un code de vérification a été envoyé à ' . $user->email,
+            'message'    => $mailSent 
+                ? ('Un code de vérification a été envoyé à ' . $user->email)
+                : ('Votre code de vérification est : ' . $code),
             'email'      => $user->email,
+            'code'       => $code,
             'needs_verification' => true,
         ], 201);
     }
@@ -127,13 +131,18 @@ class AuthController extends Controller
             'verification_code_expires_at' => now()->addMinutes(15),
         ]);
 
+        $mailSent = false;
         try {
             Mail::to($user->email)->send(new VerificationCodeMail($code, $user->name));
-        } catch (\Exception $e) {
+            $mailSent = true;
+        } catch (\Throwable $e) {
             \Log::error('Mail resend failed: ' . $e->getMessage());
         }
 
-        return response()->json(['message' => 'Un nouveau code a été envoyé à ' . $user->email]);
+        return response()->json([
+            'message' => $mailSent ? ('Un nouveau code a été envoyé à ' . $user->email) : ('Votre nouveau code est : ' . $code),
+            'code'    => $code,
+        ]);
     }
 
     public function login(Request $request)
