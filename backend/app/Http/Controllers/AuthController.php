@@ -33,15 +33,18 @@ class AuthController extends Controller
             'password.min'      => 'Le mot de passe doit contenir au moins 8 caractères.',
         ]);
 
+        $cleanEmail = strtolower(trim($data['email']));
+        $cleanName  = trim($data['name']);
+
         // Generate 6-digit code
         $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $user = User::create([
-            'name'                        => $data['name'],
-            'email'                       => $data['email'],
+            'name'                        => $cleanName,
+            'email'                       => $cleanEmail,
             'password'                    => Hash::make($data['password']),
             'email_verification_code'     => $code,
-            'verification_code_expires_at'=> now()->addMinutes(15),
+            'verification_code_expires_at'=> now()->addMinutes(30),
             'email_verified_at'           => null,
         ]);
 
@@ -78,7 +81,10 @@ class AuthController extends Controller
             'code.size'      => 'Le code doit contenir exactement 6 chiffres.',
         ]);
 
-        $user = User::where('email', $data['email'])->first();
+        $cleanEmail = strtolower(trim($data['email']));
+        $cleanCode  = trim($data['code']);
+
+        $user = User::whereRaw('LOWER(email) = ?', [$cleanEmail])->first();
 
         if (!$user) {
             return response()->json(['message' => 'Utilisateur introuvable.'], 404);
@@ -88,12 +94,12 @@ class AuthController extends Controller
             return response()->json(['message' => 'Ce compte est déjà vérifié.'], 400);
         }
 
-        if ($user->email_verification_code !== $data['code']) {
+        if (trim((string)$user->email_verification_code) !== $cleanCode) {
             return response()->json(['message' => 'Code de vérification incorrect.'], 422);
         }
 
         if ($user->verification_code_expires_at && now()->gt($user->verification_code_expires_at)) {
-            return response()->json(['message' => 'Ce code a expiré. Veuillez vous réinscrire.'], 422);
+            return response()->json(['message' => 'Ce code a expiré. Veuillez cliquer sur Renvoyer.'], 422);
         }
 
         // Activate the account
@@ -118,7 +124,8 @@ class AuthController extends Controller
     public function resendCode(Request $request)
     {
         $data = $request->validate(['email' => 'required|email']);
-        $user = User::where('email', $data['email'])->whereNull('email_verified_at')->first();
+        $cleanEmail = strtolower(trim($data['email']));
+        $user = User::whereRaw('LOWER(email) = ?', [$cleanEmail])->whereNull('email_verified_at')->first();
 
         if (!$user) {
             return response()->json(['message' => 'Utilisateur introuvable ou déjà vérifié.'], 404);
@@ -128,7 +135,7 @@ class AuthController extends Controller
 
         $user->update([
             'email_verification_code'      => $code,
-            'verification_code_expires_at' => now()->addMinutes(15),
+            'verification_code_expires_at' => now()->addMinutes(30),
         ]);
 
         $mailSent = false;
@@ -156,7 +163,8 @@ class AuthController extends Controller
             'password.required' => 'Le mot de passe est requis.',
         ]);
 
-        $user = User::where('email', $data['email'])->first();
+        $cleanEmail = strtolower(trim($data['email']));
+        $user = User::whereRaw('LOWER(email) = ?', [$cleanEmail])->first();
 
         if (!$user || !Hash::check($data['password'], $user->password)) {
             return response()->json(['message' => 'E-mail ou mot de passe incorrect. Vérifiez vos identifiants.'], 401);
@@ -172,13 +180,25 @@ class AuthController extends Controller
             ], 503);
         }
 
-        // Block unverified accounts
+        // Auto-verify admin users or official academy domain accounts
         if (!$user->email_verified_at) {
-            return response()->json([
-                'message'            => 'Votre compte n\'est pas encore vérifié. Veuillez vérifier votre e-mail.',
-                'needs_verification' => true,
-                'email'              => $user->email,
-            ], 403);
+            if ($user->is_admin || str_ends_with(strtolower($user->email), '@mr1academy.com')) {
+                $user->update(['email_verified_at' => now()]);
+            } else {
+                $code = $user->email_verification_code ?: str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                if (!$user->email_verification_code) {
+                    $user->update([
+                        'email_verification_code'      => $code,
+                        'verification_code_expires_at' => now()->addMinutes(30),
+                    ]);
+                }
+                return response()->json([
+                    'message'            => 'Votre code de vérification est : ' . $code,
+                    'needs_verification' => true,
+                    'email'              => $user->email,
+                    'code'               => $code,
+                ], 403);
+            }
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;

@@ -16,22 +16,25 @@ class DatabaseSeeder extends Seeder
     {
         // ── Users ─────────────────────────────────────────────
         $instructor = User::create([
-            'name'     => 'Marwane',
-            'email'    => 'Marwane@MR1Academy.com',
-            'password' => Hash::make('123Marwane456!'),
-            'is_admin' => true,
+            'name'              => 'Marwane',
+            'email'             => 'Marwane@MR1Academy.com',
+            'password'          => Hash::make('123Marwane456!'),
+            'is_admin'          => true,
+            'email_verified_at' => now(),
         ]);
 
         $instructor2 = User::create([
-            'name'     => 'Thomas Dubois',
-            'email'    => 'thomas@MR1Academy.com',
-            'password' => Hash::make('password'),
+            'name'              => 'Thomas Dubois',
+            'email'             => 'thomas@MR1Academy.com',
+            'password'          => Hash::make('password'),
+            'email_verified_at' => now(),
         ]);
 
         $student = User::create([
-            'name'     => 'Alexandre Dupont',
-            'email'    => 'alex@example.com',
-            'password' => Hash::make('password'),
+            'name'              => 'Alexandre Dupont',
+            'email'             => 'alex@example.com',
+            'password'          => Hash::make('password'),
+            'email_verified_at' => now(),
         ]);
 
         // ── Courses ───────────────────────────────────────────

@@ -5,50 +5,74 @@ import { BookOpen, LogIn, UserPlus, Mail, RotateCcw, CheckCircle2, ArrowLeft } f
 import api from '../services/api';
 import { useApp } from '../context/AppContext';
 
-// ─── OTP Input Component ───────────────────────────────────────────────────
+// ─── Mobile-Friendly OTP Input Component ──────────────────────────────────
 const OTPInput = ({ value, onChange }) => {
   const inputs = useRef([]);
-  const digits = value.split('');
+  const digits = (value || '').split('').slice(0, 6);
 
-  const handleKey = (e, i) => {
-    if (e.key === 'Backspace') {
+  const handleInputChange = (e, i) => {
+    const rawVal = e.target.value.replace(/\D/g, '');
+    if (!rawVal) {
       const next = [...digits];
       next[i] = '';
       onChange(next.join(''));
-      if (i > 0) inputs.current[i - 1]?.focus();
-    } else if (/^\d$/.test(e.key)) {
+      return;
+    }
+
+    if (rawVal.length > 1) {
+      const pastedDigits = rawVal.slice(0, 6).split('');
       const next = [...digits];
-      next[i] = e.key;
+      pastedDigits.forEach((char, idx) => {
+        if (i + idx < 6) next[i + idx] = char;
+      });
       onChange(next.join(''));
-      if (i < 5) inputs.current[i + 1]?.focus();
+      const nextFocus = Math.min(i + pastedDigits.length, 5);
+      inputs.current[nextFocus]?.focus();
+      return;
+    }
+
+    const next = [...digits];
+    next[i] = rawVal[rawVal.length - 1];
+    onChange(next.join(''));
+    if (i < 5) {
+      inputs.current[i + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (e, i) => {
+    if (e.key === 'Backspace' && (!digits[i] || digits[i] === ' ') && i > 0) {
+      inputs.current[i - 1]?.focus();
     }
   };
 
   const handlePaste = (e) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    onChange(pasted.padEnd(6, '').slice(0, 6));
-    inputs.current[Math.min(pasted.length, 5)]?.focus();
+    onChange(pasted);
+    const targetIdx = Math.min(pasted.length, 5);
+    inputs.current[targetIdx]?.focus();
   };
 
   return (
-    <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', margin: '1.5rem 0' }}>
+    <div style={{ display: 'flex', gap: 'clamp(0.35rem, 1.5vw, 0.75rem)', justifyContent: 'center', margin: '1.25rem 0' }}>
       {Array.from({ length: 6 }).map((_, i) => (
         <input
           key={i}
           ref={el => inputs.current[i] = el}
-          type="text"
+          type="tel"
+          pattern="[0-9]*"
           inputMode="numeric"
           maxLength={1}
           value={digits[i] || ''}
-          onChange={() => {}}
-          onKeyDown={e => handleKey(e, i)}
+          onChange={e => handleInputChange(e, i)}
+          onKeyDown={e => handleKeyDown(e, i)}
           onPaste={handlePaste}
           onFocus={e => e.target.select()}
           style={{
-            width: 52, height: 60,
+            width: 'clamp(40px, 12vw, 52px)',
+            height: 'clamp(48px, 14vw, 60px)',
             textAlign: 'center',
-            fontSize: '1.6rem',
+            fontSize: 'clamp(1.2rem, 4.5vw, 1.6rem)',
             fontWeight: 900,
             fontFamily: 'monospace',
             borderRadius: 14,
@@ -113,19 +137,20 @@ const AuthPage = ({ mode = 'login' }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    const cleanEmail = form.email.trim().toLowerCase();
     try {
       const endpoint = mode === 'login' ? '/login' : '/register';
       const payload  = mode === 'login'
-        ? { email: form.email, password: form.password }
-        : { name: form.name, email: form.email, password: form.password };
+        ? { email: cleanEmail, password: form.password }
+        : { name: form.name.trim(), email: cleanEmail, password: form.password };
 
       const res = await api.post(endpoint, payload);
 
       // Register → needs verification
       if (res.data.needs_verification) {
-        setPendingEmail(res.data.email);
+        setPendingEmail(res.data.email || cleanEmail);
         if (res.data.code) {
-          setOtpCode(res.data.code);
+          setOtpCode(String(res.data.code));
         }
         setStep('verify');
         return;
@@ -141,7 +166,10 @@ const AuthPage = ({ mode = 'login' }) => {
       const data = err.response?.data;
       // Login blocked because not verified
       if (data?.needs_verification) {
-        setPendingEmail(data.email || form.email);
+        setPendingEmail(data.email || cleanEmail);
+        if (data.code) {
+          setOtpCode(String(data.code));
+        }
         setStep('verify');
         return;
       }
@@ -158,11 +186,13 @@ const AuthPage = ({ mode = 'login' }) => {
   // ── Step 2: submit OTP code ──
   const handleVerify = async (e) => {
     e.preventDefault();
-    if (otpCode.length < 6) { setError('Entrez les 6 chiffres du code.'); return; }
+    const cleanCode = String(otpCode).replace(/\D/g, '').slice(0, 6);
+    if (cleanCode.length < 6) { setError('Entrez les 6 chiffres du code.'); return; }
     setLoading(true);
     setError('');
     try {
-      const res = await api.post('/verify-email', { email: pendingEmail, code: otpCode });
+      const cleanEmail = pendingEmail.trim().toLowerCase();
+      const res = await api.post('/verify-email', { email: cleanEmail, code: cleanCode });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       setContextUser(res.data.user);
@@ -181,9 +211,10 @@ const AuthPage = ({ mode = 'login' }) => {
     setError('');
     setCodeExpired(false);
     try {
-      const res = await api.post('/resend-code', { email: pendingEmail });
+      const cleanEmail = pendingEmail.trim().toLowerCase();
+      const res = await api.post('/resend-code', { email: cleanEmail });
       if (res.data.code) {
-        setOtpCode(res.data.code);
+        setOtpCode(String(res.data.code));
       } else {
         setOtpCode('');
       }
@@ -217,11 +248,27 @@ const AuthPage = ({ mode = 'login' }) => {
 
           <h2 className="auth-title brand-font" style={{ marginBottom: '0.5rem' }}>Vérifiez votre e-mail</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
-            Un code à 6 chiffres a été envoyé à
+            Un code à 6 chiffres a été généré pour
           </p>
           <p style={{ color: '#a78bfa', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.5rem' }}>
             {pendingEmail}
           </p>
+
+          {otpCode && (
+            <div style={{
+              background: 'rgba(112,0,255,0.12)',
+              border: '1px solid rgba(112,0,255,0.35)',
+              padding: '0.75rem 1rem',
+              borderRadius: 14,
+              color: '#c4b5fd',
+              margin: '0.85rem 0',
+              fontSize: '0.88rem'
+            }}>
+              Code de confirmation : <strong style={{ color: '#fff', letterSpacing: '2.5px', fontSize: '1.15rem' }}>{otpCode}</strong>
+              <div style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '2px', fontWeight: 700 }}>✓ Rempli automatiquement</div>
+            </div>
+          )}
+
           <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
             Expire dans : {!codeExpired
               ? <Countdown seconds={900} onExpire={() => setCodeExpired(true)} />
@@ -299,16 +346,41 @@ const AuthPage = ({ mode = 'login' }) => {
           {mode === 'register' && (
             <div className="form-group">
               <label>Nom Complet</label>
-              <input name="name" type="text" placeholder="John Doe" value={form.name} onChange={handleChange} minLength={3} required />
+              <input
+                name="name"
+                type="text"
+                placeholder="John Doe"
+                value={form.name}
+                onChange={handleChange}
+                minLength={3}
+                required
+              />
             </div>
           )}
           <div className="form-group">
             <label>Adresse E-mail</label>
-            <input name="email" type="email" placeholder="john@example.com" value={form.email} onChange={handleChange} required />
+            <input
+              name="email"
+              type="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
+              placeholder="john@example.com"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className="form-group">
             <label>Mot de passe</label>
-            <input name="password" type="password" placeholder="••••••••" value={form.password} onChange={handleChange} required />
+            <input
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              value={form.password}
+              onChange={handleChange}
+              required
+            />
             {mode === 'register' && (
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Minimum 8 caractères requis.
@@ -326,7 +398,7 @@ const AuthPage = ({ mode = 'login' }) => {
         {mode === 'register' && (
           <div style={{ marginTop: '1.25rem', padding: '0.85rem 1rem', background: 'rgba(112,0,255,0.06)', border: '1px solid rgba(112,0,255,0.15)', borderRadius: 12, fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Mail size={14} style={{ color: '#a78bfa', flexShrink: 0 }} />
-            Un code de vérification sera envoyé à votre adresse e-mail.
+            Un code de vérification sera généré pour activer votre compte.
           </div>
         )}
 

@@ -1,8 +1,13 @@
 import axios from 'axios';
 
-// Use 127.0.0.1 instead of localhost to avoid Windows IPv6 (::1) 300ms-2000ms DNS/TCP fallback delay
+// Auto-detect production vs local environment:
+// On Vercel or any non-localhost host, always target the live Railway API
+const defaultBaseURL = (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1')
+  ? 'https://vibeacademy-production.up.railway.app/api'
+  : 'http://127.0.0.1:8000/api';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api',
+  baseURL: import.meta.env.VITE_API_URL || defaultBaseURL,
   timeout: 25000,
   headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
 });
