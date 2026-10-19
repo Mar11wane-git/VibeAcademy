@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -95,6 +95,7 @@ const Footer = () => {
 
   return (
     <footer
+      className="site-footer"
       style={{
         marginTop: 'auto',
         background: 'linear-gradient(180deg, rgba(10, 10, 22, 0.92) 0%, rgba(5, 5, 13, 0.99) 100%)',

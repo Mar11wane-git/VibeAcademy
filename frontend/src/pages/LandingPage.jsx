@@ -74,7 +74,6 @@ const LandingPage = () => {
             justifyContent: 'center',
             color: 'white',
             cursor: 'pointer',
-            display: 'none',
           }}
         >
           {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -209,12 +208,12 @@ const LandingPage = () => {
       </div>
 
       {/* Course Visual Gallery Showcase */}
-      <div id="courses-showcase" style={{ padding: '6rem 4rem', maxWidth: '1320px', margin: '0 auto' }}>
+      <div id="courses-showcase" className="landing-section landing-section-showcase" style={{ maxWidth: '1320px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
           <span style={{ fontSize: '0.78rem', fontWeight: 900, color: '#00d1ff', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
             CURRICULUM INGÉNIEUR &amp; DESIGN
           </span>
-          <h2 className="brand-font" style={{ fontSize: '2.7rem', marginTop: '0.5rem', marginBottom: '0.8rem' }}>
+          <h2 className="brand-font landing-section-title" style={{ marginTop: '0.5rem', marginBottom: '0.8rem' }}>
             Des formations complètes sur les technologies les plus demandées
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', maxWidth: '680px', margin: '0 auto' }}>
@@ -222,7 +221,7 @@ const LandingPage = () => {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.75rem' }}>
+        <div className="landing-cards-grid" style={{ display: 'grid', gap: '1.75rem' }}>
           {COURSE_COVER_PRESETS.slice(0, 6).map((preset, i) => (
             <motion.div
               key={i}
@@ -263,14 +262,14 @@ const LandingPage = () => {
       </div>
 
       {/* Features Section */}
-      <div id="features" style={{ padding: '7rem 4rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--glass-border)', borderBottom: '1px solid var(--glass-border)' }}>
+      <div id="features" className="landing-section landing-section-features" style={{ background: 'var(--bg-secondary)', borderTop: '1px solid var(--glass-border)', borderBottom: '1px solid var(--glass-border)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
-          <h2 className="brand-font" style={{ fontSize: '2.8rem', marginBottom: '1rem' }}>Pourquoi choisir MR1Academy ?</h2>
+          <h2 className="brand-font landing-section-title" style={{ marginBottom: '1rem' }}>Pourquoi choisir MR1Academy ?</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '1.15rem', marginBottom: '4rem', maxWidth: '650px', margin: '0 auto 4rem' }}>
             Un écosystème technique complet conçu pour accélérer votre progression.
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.75rem' }}>
+          <div className="landing-features-grid" style={{ display: 'grid', gap: '1.75rem' }}>
             {[
               { icon: ListVideo, title: 'Playlists Séquentielles', desc: 'Calcul automatique de la durée moyenne, validation d’épisode et passage fluide à la vidéo suivante.' },
               { icon: Bot, title: 'Assistant IA VibeGPT', desc: 'Posez vos questions sur les cours, le code, les algorithmes ou votre progression à notre IA intégrée.' },
@@ -290,19 +289,19 @@ const LandingPage = () => {
       </div>
 
       {/* Academic Certification Workflow Section (100% Free, Zero Payment) */}
-      <div id="certifications" style={{ padding: '7rem 4rem', position: 'relative' }}>
+      <div id="certifications" className="landing-section landing-section-certifications" style={{ position: 'relative' }}>
         <div style={{ maxWidth: '1080px', margin: '0 auto', textAlign: 'center' }}>
           <span style={{ fontSize: '0.78rem', fontWeight: 900, color: '#4ade80', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
             VALIDATION OFFICIELLE DES ACQUIS
           </span>
-          <h2 className="brand-font" style={{ fontSize: '2.8rem', marginTop: '0.5rem', marginBottom: '1rem' }}>
+          <h2 className="brand-font landing-section-title" style={{ marginTop: '0.5rem', marginBottom: '1rem' }}>
             Comment obtenir votre Certificat MR1Academy ?
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '3.5rem', maxWidth: '680px', margin: '0 auto 3.5rem' }}>
             Toutes nos formations et certifications sont intégralement accessibles aux étudiants inscrits. Votre diplôme s&apos;obtient au mérite académique en 3 étapes :
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', textAlign: 'left' }}>
+          <div className="landing-steps-grid" style={{ display: 'grid', gap: '2rem', textAlign: 'left' }}>
             {[
               {
                 step: 'ÉTAPE 01',
