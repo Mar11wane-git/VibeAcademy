@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, LogIn, UserPlus, Mail, RotateCcw, CheckCircle2, ArrowLeft } from 'lucide-react';
 import api from '../services/api';
 import { useApp } from '../context/AppContext';
+import VibeLogo from '../components/VibeLogo';
 
 // ─── Mobile-Friendly OTP Input Component ──────────────────────────────────
 const OTPInput = ({ value, onChange }) => {
@@ -233,9 +234,8 @@ const AuthPage = ({ mode = 'login' }) => {
       <div className="auth-page">
         <div className="orb-1" /><div className="orb-2" />
 
-        <div className="brand cursor-pointer auth-brand-header" onClick={() => navigate('/')}>
-          <div className="brand-icon"><BookOpen size={20} strokeWidth={2.5} /></div>
-          MR1Academy
+        <div className="auth-brand-wrap" onClick={() => navigate('/')}>
+          <VibeLogo size={42} />
         </div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="auth-card"
@@ -250,7 +250,7 @@ const AuthPage = ({ mode = 'login' }) => {
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
             Un code à 6 chiffres a été généré pour
           </p>
-          <p style={{ color: '#a78bfa', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.5rem' }}>
+          <p style={{ color: '#a78bfa', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.5rem', wordBreak: 'break-all' }}>
             {pendingEmail}
           </p>
 
@@ -326,9 +326,8 @@ const AuthPage = ({ mode = 'login' }) => {
     <div className="auth-page">
       <div className="orb-1" /><div className="orb-2" />
 
-      <div className="brand cursor-pointer auth-brand-header" onClick={() => navigate('/')}>
-        <div className="brand-icon"><BookOpen size={20} strokeWidth={2.5} /></div>
-        MR1Academy
+      <div className="auth-brand-wrap" onClick={() => navigate('/')}>
+        <VibeLogo size={42} />
       </div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="auth-card">
