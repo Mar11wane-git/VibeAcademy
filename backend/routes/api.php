@@ -93,6 +93,8 @@ Route::middleware('maintenance')->group(function () {
             Route::delete('/courses/{id}',  [AdminController::class, 'deleteCourse']);
             Route::delete('/users/{id}',    [AdminController::class, 'deleteUser']);
             Route::post('/users/{id}/toggle-admin', [AdminController::class, 'toggleAdmin']);
+            Route::get('/tasks',            [AdminController::class, 'getTasks']);
+            Route::post('/tasks',           [AdminController::class, 'saveTasks']);
             
             // Course management for admin
             Route::post('/courses',         [CourseController::class, 'store']);

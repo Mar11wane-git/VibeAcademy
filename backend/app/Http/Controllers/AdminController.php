@@ -179,4 +179,81 @@ class AdminController extends Controller
             return response()->json(['message' => 'Échec de la modification des privilèges.'], 500);
         }
     }
+
+    public function getTasks()
+    {
+        try {
+            $setting = SiteSetting::where('key', 'admin_tasks')->first();
+            $tasks = $setting ? json_decode($setting->value, true) : null;
+            if (!$tasks || !is_array($tasks)) {
+                $tasks = [
+                    [
+                        'id' => '1',
+                        'title' => 'Déploiement et publication du module vidéo Java 21 LTS & Spring Boot',
+                        'category' => 'Contenu',
+                        'priority' => 'Haute',
+                        'status' => 'Terminé',
+                        'due_date' => date('Y-m-d'),
+                        'notes' => 'Vidéos HD et chapitres microservices validés.'
+                    ],
+                    [
+                        'id' => '2',
+                        'title' => 'Optimisation du CDN Edge et mise en cache des requêtes catalogue',
+                        'category' => 'Système',
+                        'priority' => 'Moyenne',
+                        'status' => 'En cours',
+                        'due_date' => date('Y-m-d', strtotime('+3 days')),
+                        'notes' => 'Réduction de la latence à moins de 80ms.'
+                    ],
+                    [
+                        'id' => '3',
+                        'title' => 'Contrôle de sécurité des tokens JWT et restriction stricte des privilèges',
+                        'category' => 'Sécurité',
+                        'priority' => 'Haute',
+                        'status' => 'Terminé',
+                        'due_date' => date('Y-m-d'),
+                        'notes' => 'Protection des routes administratives via middleware Laravel.'
+                    ],
+                    [
+                        'id' => '4',
+                        'title' => 'Ajout de la certification automatique et génération du PDF officiel',
+                        'category' => 'Développement',
+                        'priority' => 'Haute',
+                        'status' => 'En cours',
+                        'due_date' => date('Y-m-d', strtotime('+5 days')),
+                        'notes' => 'Système de vérification par code QR unique.'
+                    ],
+                    [
+                        'id' => '5',
+                        'title' => 'Sauvegarde automatique hebdomadaire de la base PostgreSQL Railway',
+                        'category' => 'Système',
+                        'priority' => 'Basse',
+                        'status' => 'À faire',
+                        'due_date' => date('Y-m-d', strtotime('+7 days')),
+                        'notes' => 'Script de dump SQL avec envoi chiffré.'
+                    ]
+                ];
+            }
+            return response()->json($tasks);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Impossible de charger les tâches.'], 500);
+        }
+    }
+
+    public function saveTasks(Request $request)
+    {
+        try {
+            $tasks = $request->input('tasks', []);
+            SiteSetting::updateOrCreate(
+                ['key' => 'admin_tasks'],
+                ['value' => json_encode($tasks, JSON_UNESCAPED_UNICODE)]
+            );
+            return response()->json([
+                'message' => 'Tâches administratives sauvegardées avec succès.',
+                'tasks' => $tasks
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erreur lors de la sauvegarde des tâches.'], 500);
+        }
+    }
 }

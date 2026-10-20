@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   Users, BookOpen, MessageSquare,
   Trash2, Plus, Edit, X, Lock,
   BarChart3, Search,
   RefreshCw, Award, Shield, Film, Clock, Link as LinkIcon,
-  ExternalLink, CheckCircle2, AlertTriangle, Layers,
-  Compass, Eye, Sparkles, Filter, Activity
+  CheckCircle2, AlertTriangle, Layers,
+  CheckSquare, Terminal, Server, Cpu, Database,
+  Calendar, Check, ArrowRight, Play, Flame, Filter, Zap
 } from 'lucide-react';
 import api from '../services/api';
 import AdminLayout from '../layouts/AdminLayout';
@@ -25,8 +26,55 @@ const inputStyle = {
   transition: 'border-color 0.2s',
 };
 
+const DEFAULT_ADMIN_TASKS = [
+  {
+    id: '1',
+    title: 'Déploiement et publication du module vidéo Java 21 LTS & Spring Boot',
+    category: 'Contenu',
+    priority: 'Haute',
+    status: 'Terminé',
+    due_date: new Date().toISOString().slice(0, 10),
+    notes: 'Vidéos HD et chapitres microservices validés.'
+  },
+  {
+    id: '2',
+    title: 'Optimisation du CDN Edge et mise en cache des requêtes catalogue',
+    category: 'Système',
+    priority: 'Moyenne',
+    status: 'En cours',
+    due_date: new Date(Date.now() + 86400000 * 3).toISOString().slice(0, 10),
+    notes: 'Réduction de la latence à moins de 80ms.'
+  },
+  {
+    id: '3',
+    title: 'Contrôle de sécurité des tokens JWT et restriction stricte des privilèges',
+    category: 'Sécurité',
+    priority: 'Haute',
+    status: 'Terminé',
+    due_date: new Date().toISOString().slice(0, 10),
+    notes: 'Protection des routes administratives via middleware Laravel.'
+  },
+  {
+    id: '4',
+    title: 'Ajout de la certification automatique et validation des quiz interactifs',
+    category: 'Développement',
+    priority: 'Haute',
+    status: 'En cours',
+    due_date: new Date(Date.now() + 86400000 * 5).toISOString().slice(0, 10),
+    notes: 'Système de vérification par code QR unique.'
+  },
+  {
+    id: '5',
+    title: 'Sauvegarde automatique hebdomadaire de la base PostgreSQL Railway',
+    category: 'Système',
+    priority: 'Basse',
+    status: 'À faire',
+    due_date: new Date(Date.now() + 86400000 * 7).toISOString().slice(0, 10),
+    notes: 'Script de dump SQL avec envoi chiffré.'
+  }
+];
+
 const AdminPanel = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [systemSettings, setSystemSettings] = useState({
@@ -43,6 +91,27 @@ const AdminPanel = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTech, setSelectedTech] = useState('ALL');
   const [userRoleFilter, setUserRoleFilter] = useState('ALL'); // ALL, ADMIN, USER
+
+  // Admin Tasks state
+  const [tasks, setTasks] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mr1_admin_tasks_v1');
+      return saved ? JSON.parse(saved) : DEFAULT_ADMIN_TASKS;
+    } catch {
+      return DEFAULT_ADMIN_TASKS;
+    }
+  });
+  const [taskFilterStatus, setTaskFilterStatus] = useState('ALL');
+  const [taskFilterCategory, setTaskFilterCategory] = useState('ALL');
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    category: 'Développement',
+    priority: 'Haute',
+    status: 'À faire',
+    due_date: new Date().toISOString().slice(0, 10),
+    notes: ''
+  });
 
   // Course modal state
   const [modalType, setModalType]       = useState(null);
@@ -70,6 +139,7 @@ const AdminPanel = () => {
     const path = location.pathname;
     if (path === '/admin/courses') setActiveTab('Courses');
     else if (path === '/admin/users') setActiveTab('Students');
+    else if (path === '/admin/tasks') setActiveTab('Tasks');
     else if (path === '/admin/settings') setActiveTab('Settings');
     else setActiveTab('Dashboard');
   }, [location.pathname]);
@@ -77,16 +147,21 @@ const AdminPanel = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [sRes, cRes, uRes, setRes] = await Promise.all([
+      const [sRes, cRes, uRes, setRes, tRes] = await Promise.all([
         api.get('/admin/stats'),
         api.get('/admin/courses'),
         api.get('/admin/users'),
-        api.get('/admin/settings').catch(() => ({ data: {} }))
+        api.get('/admin/settings').catch(() => ({ data: {} })),
+        api.get('/admin/tasks').catch(() => ({ data: null }))
       ]);
       setStats(sRes.data);
       setCourses(cRes.data || []);
       setUsers(uRes.data || []);
       if (setRes.data) setSystemSettings(prev => ({ ...prev, ...setRes.data }));
+      if (tRes.data && Array.isArray(tRes.data) && tRes.data.length > 0) {
+        setTasks(tRes.data);
+        localStorage.setItem('mr1_admin_tasks_v1', JSON.stringify(tRes.data));
+      }
     } catch {
       showToast('Erreur lors de la synchronisation avec le serveur.', 'error');
     } finally {
@@ -105,6 +180,60 @@ const AdminPanel = () => {
     } catch {
       showToast('Échec de la mise à jour des réglages.', 'error');
     }
+  };
+
+  // ── Admin Tasks handlers ─────────────────────────────────
+  const persistTasks = async (updated) => {
+    setTasks(updated);
+    localStorage.setItem('mr1_admin_tasks_v1', JSON.stringify(updated));
+    try {
+      await api.post('/admin/tasks', { tasks: updated });
+    } catch { /* saved to local storage fallback */ }
+  };
+
+  const handleCreateTask = (e) => {
+    e.preventDefault();
+    if (!newTask.title.trim()) {
+      showToast('Veuillez entrer un titre pour la tâche.', 'error');
+      return;
+    }
+    const created = {
+      ...newTask,
+      id: Date.now().toString()
+    };
+    const updated = [created, ...tasks];
+    persistTasks(updated);
+    setShowNewTaskModal(false);
+    setNewTask({
+      title: '',
+      category: 'Développement',
+      priority: 'Haute',
+      status: 'À faire',
+      due_date: new Date().toISOString().slice(0, 10),
+      notes: ''
+    });
+    showToast('Tâche administrative enregistrée et planifiée !');
+  };
+
+  const handleToggleTaskStatus = (taskId) => {
+    const updated = tasks.map(t => {
+      if (t.id === taskId) {
+        let nextStatus = 'En cours';
+        if (t.status === 'À faire') nextStatus = 'En cours';
+        else if (t.status === 'En cours') nextStatus = 'Terminé';
+        else nextStatus = 'À faire';
+        return { ...t, status: nextStatus };
+      }
+      return t;
+    });
+    persistTasks(updated);
+    showToast('Statut de la tâche mis à jour.');
+  };
+
+  const handleDeleteTask = (taskId) => {
+    const updated = tasks.filter(t => t.id !== taskId);
+    persistTasks(updated);
+    showToast('Tâche supprimée du planning.');
   };
 
   // ── Course handlers ──────────────────────────────────────
@@ -203,8 +332,8 @@ const AdminPanel = () => {
   const handleToggleAdmin = (u) => {
     const nextRole = u.is_admin ? 'étudiant' : 'administrateur';
     setConfirmModal({
-      title: `Changer les droits d'accès`,
-      message: `Voulez-vous modifier les privilèges de ${u.name} pour en faire un ${nextRole} ?`,
+      title: `Modifier les privilèges administrateur`,
+      message: `Confirmez-vous le passage du compte de ${u.name} au rang de ${nextRole} ?`,
       onConfirm: async () => {
         try {
           const res = await api.post(`/admin/users/${u.id}/toggle-admin`);
@@ -226,7 +355,7 @@ const AdminPanel = () => {
       onConfirm: async () => {
         try {
           await api.delete(`/admin/users/${u.id}`);
-          showToast('Utilisateur supprimé.');
+          showToast('Utilisateur supprimé de la base de données.');
           fetchData();
         } catch {
           showToast('Erreur lors de la suppression.', 'error');
@@ -262,26 +391,47 @@ const AdminPanel = () => {
     });
   }, [users, searchQuery, userRoleFilter]);
 
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(t => {
+      const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t.notes && t.notes.toLowerCase().includes(searchQuery.toLowerCase()));
+      if (!matchesSearch) return false;
+      if (taskFilterStatus !== 'ALL' && t.status !== taskFilterStatus) return false;
+      if (taskFilterCategory !== 'ALL' && t.category !== taskFilterCategory) return false;
+      return true;
+    });
+  }, [tasks, searchQuery, taskFilterStatus, taskFilterCategory]);
+
   const chartData  = stats?.monthly_registrations || [];
   const topCourses = stats?.top_courses || [];
   const recentUsers = stats?.recent_users || [];
+
+  // Task statistics
+  const taskStats = useMemo(() => {
+    const total = tasks.length;
+    const todo = tasks.filter(t => t.status === 'À faire').length;
+    const inProgress = tasks.filter(t => t.status === 'En cours').length;
+    const done = tasks.filter(t => t.status === 'Terminé').length;
+    const completionRate = total > 0 ? Math.round((done / total) * 100) : 0;
+    return { total, todo, inProgress, done, completionRate };
+  }, [tasks]);
 
   return (
     <AdminLayout onRefresh={fetchData} isRefreshing={loading}>
       <div style={{ padding: '2rem 2.5rem', width: '100%', maxWidth: '1440px', margin: '0 auto' }}>
 
-        {/* ─── Header & Search Banner ─── */}
-        <div className="governance-header" style={{ marginBottom: '2rem' }}>
+        {/* ─── Backoffice Header Banner ─── */}
+        <div className="governance-header" style={{ marginBottom: '2.25rem' }}>
           <div>
-            <div className="security-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.6rem' }}>
-              <Lock size={12} />
-              <span>SUPER ADMIN CONSOLE · TEMPS RÉEL</span>
+            <div className="security-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', marginBottom: '0.5rem' }}>
+              <Lock size={12} color="#00d1ff" />
+              <span style={{ color: '#00d1ff' }}>CONSOLE OPÉRATIONNELLE SUPER ADMIN</span>
             </div>
-            <h1 className="brand-font" style={{ fontSize: '2.3rem', margin: 0, lineHeight: 1.2 }}>
-              Centre de Gestion & Pilotage
+            <h1 className="brand-font" style={{ fontSize: '2.25rem', margin: 0, lineHeight: 1.2, color: '#ffffff' }}>
+              Centre de Commandement & Développement
             </h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginTop: '0.45rem' }}>
-              Supervisez les apprenants, administrez le catalogue certifiant et pilotez MR1 Academy.
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginTop: '0.4rem' }}>
+              Supervision de l'infrastructure, gestion des cours, administration des comptes et roadmap de développement.
             </p>
           </div>
 
@@ -290,7 +440,7 @@ const AdminPanel = () => {
               <Search size={16} />
               <input
                 type="text"
-                placeholder="Recherche dynamique..."
+                placeholder="Filtrer en direct..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
@@ -304,27 +454,41 @@ const AdminPanel = () => {
               )}
             </div>
 
-            <button
-              className="btn-pro btn-pro-primary"
-              onClick={() => {
-                setNewCourse({ title: '', description: '', thumbnail: '' });
-                setModalType('course');
-              }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.65rem 1.15rem' }}
-            >
-              <Plus size={18} />
-              <span>Nouveau Cours</span>
-            </button>
+            {activeTab === 'Courses' && (
+              <button
+                className="btn-pro btn-pro-primary"
+                onClick={() => {
+                  setNewCourse({ title: '', description: '', thumbnail: '' });
+                  setModalType('course');
+                }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.65rem 1.15rem' }}
+              >
+                <Plus size={18} />
+                <span>Nouveau Cours</span>
+              </button>
+            )}
+
+            {activeTab === 'Tasks' && (
+              <button
+                className="btn-pro btn-pro-primary"
+                onClick={() => setShowNewTaskModal(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.65rem 1.15rem' }}
+              >
+                <Plus size={18} />
+                <span>Ajouter une Tâche</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* ─── Pro Tabs Navigation ─── */}
+        {/* ─── Backoffice Tab Navigation ─── */}
         <div className="admin-tab-nav" style={{ marginBottom: '2.5rem' }}>
           {[
-            { id: 'Dashboard', icon: BarChart3, label: 'Tableau de Bord & Métriques' },
-            { id: 'Courses',   icon: BookOpen,  label: `Catalogue Formations (${courses.length})` },
+            { id: 'Dashboard', icon: BarChart3, label: 'Supervision & Métriques' },
+            { id: 'Courses',   icon: BookOpen,  label: `Gestion Formations (${courses.length})` },
             { id: 'Students',  icon: Users,     label: `Gestion Apprenants (${users.length})` },
-            { id: 'Settings',  icon: Shield,    label: 'Système & Maintenance' }
+            { id: 'Tasks',     icon: CheckSquare, label: `Tâches & Roadmap Dev (${tasks.length})` },
+            { id: 'Settings',  icon: Shield,    label: 'Réglages & Système' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -339,16 +503,16 @@ const AdminPanel = () => {
 
         {loading ? (
           <div className="flex-center" style={{ flexDirection: 'column', gap: '1.25rem', height: '45vh' }}>
-            <RefreshCw size={38} className="spin-slow" color="#a78bfa" />
+            <RefreshCw size={38} className="spin-slow" color="#00d1ff" />
             <p className="brand-font" style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-              Synchronisation des données en temps réel...
+              Interrogation des services et de la base de données...
             </p>
           </div>
         ) : (
           <AnimatePresence mode="wait">
 
             {/* ══════════════════════════════════════════════════════
-                1. DASHBOARD & LIVE STATS
+                1. SUPERVISION & KPI
             ══════════════════════════════════════════════════════ */}
             {activeTab === 'Dashboard' && (
               <motion.div key="dash" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
@@ -366,7 +530,7 @@ const AdminPanel = () => {
                     value={stats?.courses || 0}
                     subtext="En ligne sur le catalogue"
                     icon={<BookOpen size={22} />}
-                    color="#0bd1ff"
+                    color="#00d1ff"
                   />
                   <StatCard
                     label="Taux de Réussite Global"
@@ -377,7 +541,7 @@ const AdminPanel = () => {
                     color="#4ade80"
                   />
                   <StatCard
-                    label="Inscriptions aux Formations"
+                    label="Inscriptions Cumulées"
                     value={stats?.enrollments || 0}
                     subtext="Total cours suivis"
                     icon={<Layers size={22} />}
@@ -391,11 +555,11 @@ const AdminPanel = () => {
                   {/* Monthly Registrations Chart */}
                   <div className="glass-card" style={{ padding: '2rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                      <h3 className="brand-font" style={{ fontSize: '1.15rem', margin: 0 }}>
+                      <h3 className="brand-font" style={{ fontSize: '1.15rem', margin: 0, color: '#fff' }}>
                         Inscriptions Mensuelles (6 derniers mois)
                       </h3>
-                      <span style={{ fontSize: '0.72rem', background: 'rgba(112,0,255,0.15)', color: '#a78bfa', padding: '0.2rem 0.6rem', borderRadius: 8, fontWeight: 700 }}>
-                        Live DB
+                      <span style={{ fontSize: '0.72rem', background: 'rgba(0,209,255,0.12)', color: '#00d1ff', padding: '0.2rem 0.6rem', borderRadius: 8, fontWeight: 800 }}>
+                        Base PostgreSQL
                       </span>
                     </div>
 
@@ -415,9 +579,9 @@ const AdminPanel = () => {
                                 transition={{ duration: 0.6, delay: i * 0.08 }}
                                 style={{
                                   width: '100%',
-                                  background: d.count > 0 ? 'var(--gradient-magic)' : 'rgba(112,0,255,0.08)',
+                                  background: d.count > 0 ? 'linear-gradient(180deg, #00d1ff, #7000ff)' : 'rgba(112,0,255,0.08)',
                                   borderRadius: '6px',
-                                  boxShadow: d.count > 0 ? '0 0 15px rgba(112,0,255,0.3)' : 'none'
+                                  boxShadow: d.count > 0 ? '0 0 15px rgba(0,209,255,0.3)' : 'none'
                                 }}
                               />
                             </div>
@@ -433,14 +597,14 @@ const AdminPanel = () => {
                   {/* Top Courses */}
                   <div className="glass-card" style={{ padding: '2rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                      <h3 className="brand-font" style={{ fontSize: '1.15rem', margin: 0 }}>
-                        Formations les Plus Populaires
+                      <h3 className="brand-font" style={{ fontSize: '1.15rem', margin: 0, color: '#fff' }}>
+                        Formations les Plus Suivies
                       </h3>
                       <button
                         onClick={() => setActiveTab('Courses')}
-                        style={{ background: 'none', border: 'none', color: '#0bd1ff', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                        style={{ background: 'none', border: 'none', color: '#00d1ff', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}
                       >
-                        Voir tout <ExternalLink size={12} />
+                        Gérer le catalogue →
                       </button>
                     </div>
 
@@ -455,12 +619,12 @@ const AdminPanel = () => {
                           <div key={c.id}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.45rem', alignItems: 'center' }}>
                               <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{ width: 18, height: 18, borderRadius: 6, background: 'rgba(255,255,255,0.05)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 800, color: '#a78bfa' }}>
+                                <span style={{ width: 18, height: 18, borderRadius: 6, background: 'rgba(255,255,255,0.05)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 800, color: '#00d1ff' }}>
                                   #{idx + 1}
                                 </span>
                                 {c.title}
                               </span>
-                              <span style={{ color: '#0bd1ff', fontWeight: 800, fontSize: '0.8rem' }}>
+                              <span style={{ color: '#00d1ff', fontWeight: 800, fontSize: '0.8rem' }}>
                                 {c.enrollments_count} élève{c.enrollments_count > 1 ? 's' : ''}
                               </span>
                             </div>
@@ -469,7 +633,7 @@ const AdminPanel = () => {
                                 initial={{ width: 0 }}
                                 animate={{ width: `${(c.enrollments_count / maxEnroll) * 100 || 4}%` }}
                                 transition={{ duration: 0.8, delay: idx * 0.1 }}
-                                style={{ height: '100%', background: 'var(--gradient-cyber)', borderRadius: '100px' }}
+                                style={{ height: '100%', background: 'linear-gradient(90deg, #7000ff, #00d1ff)', borderRadius: '100px' }}
                               />
                             </div>
                           </div>
@@ -483,11 +647,11 @@ const AdminPanel = () => {
                 <div className="glass-card" style={{ padding: '2rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <div>
-                      <h3 className="brand-font" style={{ fontSize: '1.15rem', margin: 0 }}>
-                        Derniers Apprenants Inscrits
+                      <h3 className="brand-font" style={{ fontSize: '1.15rem', margin: 0, color: '#fff' }}>
+                        Derniers Comptes Utilisateurs Créés
                       </h3>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.2rem' }}>
-                        Nouveaux membres ayant rejoint la plateforme récemment
+                        Audit des inscriptions récentes enregistrées sur l'application
                       </p>
                     </div>
                     <button
@@ -495,7 +659,7 @@ const AdminPanel = () => {
                       className="btn-pro"
                       style={{ padding: '0.45rem 0.9rem', fontSize: '0.78rem', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#cbd5e1' }}
                     >
-                      Gérer tous les apprenants
+                      Voir tous les utilisateurs
                     </button>
                   </div>
 
@@ -521,7 +685,7 @@ const AdminPanel = () => {
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
                           <div style={{
-                            width: 38, height: 38, borderRadius: '12px',
+                            width: 36, height: 36, borderRadius: '10px',
                             background: u.is_admin ? 'linear-gradient(135deg, #7000ff, #00d1ff)' : 'rgba(255,255,255,0.06)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontWeight: 800, color: '#fff', fontSize: '0.85rem'
@@ -543,11 +707,11 @@ const AdminPanel = () => {
                             fontWeight: 800,
                             padding: '0.2rem 0.55rem',
                             borderRadius: '8px',
-                            background: u.is_admin ? 'rgba(112,0,255,0.15)' : 'rgba(74,222,128,0.1)',
-                            color: u.is_admin ? '#a78bfa' : '#4ade80',
-                            border: `1px solid ${u.is_admin ? 'rgba(112,0,255,0.3)' : 'rgba(74,222,128,0.2)'}`
+                            background: u.is_admin ? 'rgba(0,209,255,0.15)' : 'rgba(74,222,128,0.1)',
+                            color: u.is_admin ? '#00d1ff' : '#4ade80',
+                            border: `1px solid ${u.is_admin ? 'rgba(0,209,255,0.3)' : 'rgba(74,222,128,0.2)'}`
                           }}>
-                            {u.is_admin ? 'SUPER ADMIN' : 'APPRENANT'}
+                            {u.is_admin ? 'ADMINISTRATEUR' : 'UTILISATEUR'}
                           </span>
                         </div>
                       </div>
@@ -646,34 +810,24 @@ const AdminPanel = () => {
                           </div>
 
                           <div style={{ textAlign: 'center', padding: '0 0.5rem' }}>
-                            <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0bd1ff' }}>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#00d1ff' }}>
                               {c.enrollments_count || 0}
                             </div>
                             <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 600 }}>apprenants</span>
                           </div>
 
                           <div style={{ color: '#4ade80', fontSize: '0.68rem', padding: '0.35rem 0.65rem', background: 'rgba(74,222,128,0.1)', borderRadius: '8px', fontWeight: 800, border: '1px solid rgba(74,222,128,0.2)' }}>
-                            CERTIFIANT
+                            ACTIF
                           </div>
 
                           {/* Action Buttons */}
                           <div style={{ display: 'flex', gap: '0.45rem', justifyContent: 'flex-end', alignItems: 'center' }}>
-                            {/* Preview as student */}
-                            <button
-                              className="admin-action-btn"
-                              title="Voir en mode apprenant"
-                              onClick={() => navigate(`/course/${c.id}`)}
-                              style={{ color: '#0bd1ff' }}
-                            >
-                              <Eye size={17} />
-                            </button>
-
                             {/* Modules */}
                             <button
                               className="admin-action-btn"
                               title="Gérer les modules vidéo YouTube"
                               onClick={() => openModules(c)}
-                              style={{ color: '#a78bfa' }}
+                              style={{ color: '#00d1ff' }}
                             >
                               <Film size={17} />
                             </button>
@@ -710,7 +864,7 @@ const AdminPanel = () => {
             )}
 
             {/* ══════════════════════════════════════════════════════
-                3. STUDENTS MANAGEMENT
+                3. STUDENTS & USERS MANAGEMENT
             ══════════════════════════════════════════════════════ */}
             {activeTab === 'Students' && (
               <motion.div key="users" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -744,8 +898,8 @@ const AdminPanel = () => {
                 {filteredUsers.length === 0 ? (
                   <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
                     <Users size={40} color="var(--text-muted)" style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-                    <h3 className="brand-font" style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Aucun apprenant trouvé</h3>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>Ajustez vos filtres de recherche.</p>
+                    <h3 className="brand-font" style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Aucun compte trouvé</h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>Ajustez vos critères de recherche.</p>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
@@ -784,7 +938,7 @@ const AdminPanel = () => {
 
                         {/* Enrolled Courses count */}
                         <div style={{ textAlign: 'center' }}>
-                          <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0bd1ff' }}>
+                          <span style={{ fontSize: '0.88rem', fontWeight: 800, color: '#00d1ff' }}>
                             {u.enrollments_count || 0}
                           </span>
                           <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>cours suivi(s)</span>
@@ -798,9 +952,9 @@ const AdminPanel = () => {
                             borderRadius: '8px',
                             fontWeight: 800,
                             display: 'inline-block',
-                            background: u.is_admin ? 'rgba(112,0,255,0.2)' : 'rgba(255,255,255,0.05)',
-                            color: u.is_admin ? '#a78bfa' : 'var(--text-muted)',
-                            border: `1px solid ${u.is_admin ? 'rgba(112,0,255,0.4)' : 'rgba(255,255,255,0.1)'}`
+                            background: u.is_admin ? 'rgba(0,209,255,0.18)' : 'rgba(255,255,255,0.05)',
+                            color: u.is_admin ? '#00d1ff' : 'var(--text-muted)',
+                            border: `1px solid ${u.is_admin ? 'rgba(0,209,255,0.35)' : 'rgba(255,255,255,0.1)'}`
                           }}>
                             {u.is_admin ? 'SUPER ADMIN' : 'APPRENANT'}
                           </span>
@@ -811,8 +965,8 @@ const AdminPanel = () => {
                           <button
                             className="admin-action-btn"
                             onClick={() => handleToggleAdmin(u)}
-                            title={u.is_admin ? "Rétrograder en apprenant simple" : "Promouvoir Super Administrateur"}
-                            style={{ color: u.is_admin ? '#a78bfa' : 'var(--text-muted)' }}
+                            title={u.is_admin ? "Rétrograder en utilisateur simple" : "Promouvoir Super Administrateur"}
+                            style={{ color: u.is_admin ? '#00d1ff' : 'var(--text-muted)' }}
                           >
                             <Shield size={17} />
                           </button>
@@ -832,7 +986,239 @@ const AdminPanel = () => {
             )}
 
             {/* ══════════════════════════════════════════════════════
-                4. SYSTEM & MAINTENANCE SETTINGS
+                4. ADMIN TASKS & DEV ROADMAP (RÉEL ET PRO)
+            ══════════════════════════════════════════════════════ */}
+            {activeTab === 'Tasks' && (
+              <motion.div key="tasks" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                
+                {/* Tasks KPI Bar */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                  <div className="glass-card" style={{ padding: '1.25rem', borderLeft: '4px solid #00d1ff' }}>
+                    <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', margin: 0 }}>Total des Tâches</p>
+                    <p style={{ fontSize: '1.9rem', fontWeight: 900, margin: '0.3rem 0 0', color: '#fff' }}>{taskStats.total}</p>
+                  </div>
+                  <div className="glass-card" style={{ padding: '1.25rem', borderLeft: '4px solid #fbbf24' }}>
+                    <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', margin: 0 }}>En Cours d'Exécution</p>
+                    <p style={{ fontSize: '1.9rem', fontWeight: 900, margin: '0.3rem 0 0', color: '#fbbf24' }}>{taskStats.inProgress}</p>
+                  </div>
+                  <div className="glass-card" style={{ padding: '1.25rem', borderLeft: '4px solid #4ade80' }}>
+                    <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', margin: 0 }}>Tâches Terminées</p>
+                    <p style={{ fontSize: '1.9rem', fontWeight: 900, margin: '0.3rem 0 0', color: '#4ade80' }}>{taskStats.done}</p>
+                  </div>
+                  <div className="glass-card" style={{ padding: '1.25rem', borderLeft: '4px solid #a78bfa' }}>
+                    <p style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', margin: 0 }}>Taux d'Achèvement</p>
+                    <p style={{ fontSize: '1.9rem', fontWeight: 900, margin: '0.3rem 0 0', color: '#a78bfa' }}>{taskStats.completionRate}%</p>
+                  </div>
+                </div>
+
+                {/* Filter and Action Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {['ALL', 'À faire', 'En cours', 'Terminé'].map(st => (
+                      <button
+                        key={st}
+                        onClick={() => setTaskFilterStatus(st)}
+                        style={{
+                          padding: '0.42rem 0.85rem',
+                          borderRadius: '8px',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          background: taskFilterStatus === st ? '#00d1ff' : 'rgba(255,255,255,0.03)',
+                          color: taskFilterStatus === st ? '#080811' : 'var(--text-muted)',
+                          border: `1px solid ${taskFilterStatus === st ? '#00d1ff' : 'var(--glass-border)'}`,
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {st === 'ALL' ? 'Tous les statuts' : st}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)', fontWeight: 700 }}>Catégorie :</span>
+                    <select
+                      value={taskFilterCategory}
+                      onChange={e => setTaskFilterCategory(e.target.value)}
+                      style={{
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid var(--glass-border)',
+                        color: '#fff',
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: '8px',
+                        fontSize: '0.8rem',
+                        outline: 'none'
+                      }}
+                    >
+                      <option value="ALL">Toutes les catégories</option>
+                      <option value="Développement">Développement</option>
+                      <option value="Maintenance">Maintenance</option>
+                      <option value="Contenu">Contenu</option>
+                      <option value="Sécurité">Sécurité</option>
+                      <option value="Système">Système</option>
+                    </select>
+
+                    <button
+                      className="btn-pro btn-pro-primary"
+                      onClick={() => setShowNewTaskModal(true)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.9rem', fontSize: '0.8rem' }}
+                    >
+                      <Plus size={16} /> Nouvelle Tâche
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tasks List */}
+                {filteredTasks.length === 0 ? (
+                  <div className="glass-card" style={{ padding: '3.5rem', textAlign: 'center' }}>
+                    <CheckSquare size={44} color="var(--text-muted)" style={{ margin: '0 auto 1rem', opacity: 0.4 }} />
+                    <h3 className="brand-font" style={{ fontSize: '1.2rem', margin: '0 0 0.5rem', color: '#fff' }}>Aucune tâche trouvée</h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>Ajoutez une nouvelle tâche pour planifier vos développements.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                    {filteredTasks.map(t => {
+                      const isDone = t.status === 'Terminé';
+                      const isInProgress = t.status === 'En cours';
+                      const priorityColor = t.priority === 'Haute' ? '#ef4444' : (t.priority === 'Moyenne' ? '#f59e0b' : '#4ade80');
+
+                      return (
+                        <div
+                          key={t.id}
+                          className="glass-card"
+                          style={{
+                            padding: '1.2rem 1.4rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '1.25rem',
+                            borderLeft: `4px solid ${isDone ? '#4ade80' : (isInProgress ? '#fbbf24' : '#64748b')}`,
+                            opacity: isDone ? 0.8 : 1,
+                            transition: 'all 0.2s',
+                            flexWrap: 'wrap'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', flex: 1, minWidth: 260 }}>
+                            {/* Status Toggle Checkbox */}
+                            <button
+                              onClick={() => handleToggleTaskStatus(t.id)}
+                              style={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: '8px',
+                                background: isDone ? '#4ade80' : (isInProgress ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.05)'),
+                                border: `1px solid ${isDone ? '#4ade80' : (isInProgress ? '#fbbf24' : 'rgba(255,255,255,0.2)')}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                color: isDone ? '#080811' : (isInProgress ? '#fbbf24' : 'transparent'),
+                                flexShrink: 0,
+                                marginTop: 2,
+                                transition: 'all 0.2s'
+                              }}
+                              title="Cliquer pour changer le statut (À faire ➔ En cours ➔ Terminé)"
+                            >
+                              {isDone ? <Check size={18} strokeWidth={3} /> : (isInProgress ? <Play size={12} fill="#fbbf24" /> : null)}
+                            </button>
+
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                                <span style={{
+                                  fontSize: '0.68rem',
+                                  fontWeight: 800,
+                                  padding: '0.15rem 0.5rem',
+                                  borderRadius: '6px',
+                                  background: 'rgba(0,209,255,0.12)',
+                                  color: '#00d1ff',
+                                  border: '1px solid rgba(0,209,255,0.25)'
+                                }}>
+                                  {t.category}
+                                </span>
+
+                                <span style={{
+                                  fontSize: '0.68rem',
+                                  fontWeight: 800,
+                                  padding: '0.15rem 0.5rem',
+                                  borderRadius: '6px',
+                                  background: `${priorityColor}15`,
+                                  color: priorityColor,
+                                  border: `1px solid ${priorityColor}33`
+                                }}>
+                                  Priorité {t.priority}
+                                </span>
+
+                                <span style={{
+                                  fontSize: '0.68rem',
+                                  fontWeight: 800,
+                                  padding: '0.15rem 0.5rem',
+                                  borderRadius: '6px',
+                                  background: isDone ? 'rgba(74,222,128,0.15)' : (isInProgress ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.06)'),
+                                  color: isDone ? '#4ade80' : (isInProgress ? '#fbbf24' : '#94a3b8')
+                                }}>
+                                  {t.status}
+                                </span>
+                              </div>
+
+                              <h4 style={{
+                                margin: 0,
+                                fontSize: '0.96rem',
+                                fontWeight: 700,
+                                color: isDone ? 'var(--text-muted)' : 'var(--text-main)',
+                                textDecoration: isDone ? 'line-through' : 'none'
+                              }}>
+                                {t.title}
+                              </h4>
+
+                              {t.notes && (
+                                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0.25rem 0 0' }}>
+                                  {t.notes}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Date and Delete Button */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                            {t.due_date && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                <Calendar size={13} />
+                                <span>Échéance : {new Date(t.due_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+                              </div>
+                            )}
+
+                            <button
+                              onClick={() => handleToggleTaskStatus(t.id)}
+                              className="btn-pro"
+                              style={{
+                                padding: '0.35rem 0.75rem',
+                                fontSize: '0.74rem',
+                                background: 'rgba(255,255,255,0.04)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                color: '#cbd5e1'
+                              }}
+                            >
+                              Statut : {t.status}
+                            </button>
+
+                            <button
+                              className="admin-action-btn danger"
+                              onClick={() => handleDeleteTask(t.id)}
+                              title="Supprimer la tâche"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* ══════════════════════════════════════════════════════
+                5. RÉGLAGES SYSTÈME & INFRASTRUCTURE
             ══════════════════════════════════════════════════════ */}
             {activeTab === 'Settings' && (
               <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -841,8 +1227,8 @@ const AdminPanel = () => {
                   {/* System Toggles */}
                   <div className="glass-card" style={{ padding: '2.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
-                      <Shield size={22} color="#a78bfa" />
-                      <h3 className="brand-font" style={{ fontSize: '1.25rem', margin: 0 }}>Contrôles Système</h3>
+                      <Shield size={22} color="#00d1ff" />
+                      <h3 className="brand-font" style={{ fontSize: '1.25rem', margin: 0, color: '#fff' }}>Contrôles Système & Sécurité</h3>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -860,9 +1246,9 @@ const AdminPanel = () => {
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
-                          style={{ padding: '1rem', background: 'rgba(112,0,255,0.06)', borderRadius: '14px', border: '1px solid rgba(112,0,255,0.2)' }}
+                          style={{ padding: '1rem', background: 'rgba(0,209,255,0.06)', borderRadius: '14px', border: '1px solid rgba(0,209,255,0.2)' }}
                         >
-                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#a78bfa', marginBottom: '0.5rem', display: 'block' }}>
+                          <label style={{ fontSize: '0.8rem', fontWeight: 700, color: '#00d1ff', marginBottom: '0.5rem', display: 'block' }}>
                             Message affiché aux apprenants
                           </label>
                           <textarea
@@ -907,8 +1293,8 @@ const AdminPanel = () => {
                   {/* System Diagnostics Card */}
                   <div className="glass-card" style={{ padding: '2.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
-                      <Activity size={22} color="#0bd1ff" />
-                      <h3 className="brand-font" style={{ fontSize: '1.25rem', margin: 0 }}>Statut Infrastructure & Santé</h3>
+                      <Server size={22} color="#4ade80" />
+                      <h3 className="brand-font" style={{ fontSize: '1.25rem', margin: 0, color: '#fff' }}>Statut Infrastructure & Santé</h3>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
@@ -974,7 +1360,152 @@ const AdminPanel = () => {
         )}
 
         {/* ═══════════════════════════════════════════════════════
-            MODALS
+            MODAL: NOUVELLE TÂCHE ADMIN & ROADMAP
+        ═══════════════════════════════════════════════════════ */}
+        <AnimatePresence>
+          {showNewTaskModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(0,0,0,0.85)',
+                backdropFilter: 'blur(10px)',
+                zIndex: 9999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '1.5rem'
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0.95 }}
+                className="glass-card"
+                style={{ width: '100%', maxWidth: '520px', padding: '2.25rem' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <CheckSquare size={20} color="#00d1ff" />
+                    <h3 className="brand-font" style={{ fontSize: '1.3rem', margin: 0, color: '#fff' }}>
+                      Nouvelle Tâche Administrative
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => setShowNewTaskModal(false)}
+                    style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer' }}
+                  >
+                    <X size={22} />
+                  </button>
+                </div>
+
+                <form onSubmit={handleCreateTask} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.45rem' }}>
+                      Titre de la tâche ou fonctionnalité
+                    </label>
+                    <input
+                      style={inputStyle}
+                      placeholder="Ex: Optimisation du cache SQL et indexation..."
+                      value={newTask.title}
+                      onChange={e => setNewTask({ ...newTask, title: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.45rem' }}>
+                        Catégorie
+                      </label>
+                      <select
+                        style={inputStyle}
+                        value={newTask.category}
+                        onChange={e => setNewTask({ ...newTask, category: e.target.value })}
+                      >
+                        <option value="Développement">Développement</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Contenu">Contenu</option>
+                        <option value="Sécurité">Sécurité</option>
+                        <option value="Système">Système</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.45rem' }}>
+                        Priorité
+                      </label>
+                      <select
+                        style={inputStyle}
+                        value={newTask.priority}
+                        onChange={e => setNewTask({ ...newTask, priority: e.target.value })}
+                      >
+                        <option value="Haute">Haute (Critique)</option>
+                        <option value="Moyenne">Moyenne</option>
+                        <option value="Basse">Basse</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.45rem' }}>
+                        Statut initial
+                      </label>
+                      <select
+                        style={inputStyle}
+                        value={newTask.status}
+                        onChange={e => setNewTask({ ...newTask, status: e.target.value })}
+                      >
+                        <option value="À faire">À faire</option>
+                        <option value="En cours">En cours</option>
+                        <option value="Terminé">Terminé</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.45rem' }}>
+                        Date d'échéance
+                      </label>
+                      <input
+                        type="date"
+                        style={inputStyle}
+                        value={newTask.due_date}
+                        onChange={e => setNewTask({ ...newTask, due_date: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.45rem' }}>
+                      Notes techniques & spécifications (optionnel)
+                    </label>
+                    <textarea
+                      style={{ ...inputStyle, minHeight: '75px', resize: 'vertical' }}
+                      placeholder="Détails de l'implémentation, branches git, critères d'acceptation..."
+                      value={newTask.notes}
+                      onChange={e => setNewTask({ ...newTask, notes: e.target.value })}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn-pro btn-pro-primary"
+                    style={{ marginTop: '0.5rem', justifyContent: 'center' }}
+                  >
+                    Enregistrer la tâche dans le Backlog
+                  </button>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ═══════════════════════════════════════════════════════
+            MODAL: COURSES CREATE / EDIT
         ═══════════════════════════════════════════════════════ */}
         <AnimatePresence>
           {modalType && (
@@ -1016,7 +1547,7 @@ const AdminPanel = () => {
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
-                      <h2 className="brand-font" style={{ fontSize: '1.4rem', margin: 0 }}>
+                      <h2 className="brand-font" style={{ fontSize: '1.4rem', margin: 0, color: '#fff' }}>
                         {modalType === 'editCourse' ? 'Modifier la Formation' : 'Nouvelle Formation Certifiante'}
                       </h2>
                       <button
@@ -1042,7 +1573,7 @@ const AdminPanel = () => {
                     <form onSubmit={modalType === 'editCourse' ? handleEditCourse : handleCreateCourse} style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
                       <div>
                         <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.45rem' }}>
-                          Titre de la formation certifiante
+                          Titre de la formation
                         </label>
                         <input
                           style={inputStyle}
@@ -1134,7 +1665,7 @@ const AdminPanel = () => {
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
                     <div>
-                      <h2 className="brand-font" style={{ fontSize: '1.5rem', margin: 0 }}>Modules & Vidéos du Cours</h2>
+                      <h2 className="brand-font" style={{ fontSize: '1.5rem', margin: 0, color: '#fff' }}>Modules & Vidéos du Cours</h2>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.35rem' }}>
                         {moduleCourse.title}
                       </p>
@@ -1207,9 +1738,9 @@ const AdminPanel = () => {
                   </div>
 
                   {/* Add module form */}
-                  <div style={{ background: 'rgba(112,0,255,0.05)', borderRadius: '20px', padding: '1.5rem', border: '1px solid rgba(112,0,255,0.15)' }}>
-                    <h4 className="brand-font" style={{ fontSize: '1rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Film size={18} color="#a78bfa" /> Ajouter un Module Vidéo
+                  <div style={{ background: 'rgba(0,209,255,0.05)', borderRadius: '20px', padding: '1.5rem', border: '1px solid rgba(0,209,255,0.15)' }}>
+                    <h4 className="brand-font" style={{ fontSize: '1rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fff' }}>
+                      <Film size={18} color="#00d1ff" /> Ajouter un Module Vidéo
                     </h4>
                     <form onSubmit={handleAddModule} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                       <div>
@@ -1335,12 +1866,12 @@ const AdminPanel = () => {
                 bottom: '2rem',
                 right: '2rem',
                 zIndex: 10001,
-                background: toast.type === 'error' ? 'rgba(239,68,68,0.95)' : 'rgba(112,0,255,0.95)',
-                color: '#fff',
+                background: toast.type === 'error' ? 'rgba(239,68,68,0.95)' : 'rgba(0,209,255,0.95)',
+                color: toast.type === 'error' ? '#fff' : '#080811',
                 padding: '0.9rem 1.6rem',
                 borderRadius: '14px',
-                boxShadow: '0 12px 35px rgba(0,0,0,0.4)',
-                fontWeight: 700,
+                boxShadow: '0 12px 35px rgba(0,0,0,0.5)',
+                fontWeight: 800,
                 fontSize: '0.9rem',
                 backdropFilter: 'blur(8px)',
                 display: 'flex',
@@ -1348,7 +1879,7 @@ const AdminPanel = () => {
                 gap: '0.6rem'
               }}
             >
-              {toast.type === 'error' ? <AlertTriangle size={18} /> : <CheckCircle2 size={18} />}
+              {toast.type === 'error' ? <AlertTriangle size={18} color="#fff" /> : <CheckCircle2 size={18} color="#080811" />}
               <span>{toast.msg}</span>
             </motion.div>
           )}
@@ -1369,7 +1900,7 @@ const StatCard = ({ label, value, unit = '', subtext, icon, color }) => (
         {icon}
       </div>
     </div>
-    <div style={{ fontSize: '2.3rem', fontWeight: 900, lineHeight: 1.1, color: 'var(--text-main)' }}>
+    <div style={{ fontSize: '2.3rem', fontWeight: 900, lineHeight: 1.1, color: '#ffffff' }}>
       {value}{unit}
     </div>
     {subtext && (
@@ -1398,7 +1929,7 @@ const SettingItem = ({ title, desc, checked, onToggle }) => (
       style={{
         width: 44,
         height: 22,
-        background: checked ? '#7000ff' : '#333',
+        background: checked ? '#00d1ff' : '#333',
         borderRadius: '20px',
         position: 'relative',
         cursor: 'pointer',
