@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, LogIn, UserPlus, Mail, RotateCcw, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { BookOpen, LogIn, UserPlus, Mail, RotateCcw, CheckCircle2, ArrowLeft, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import api from '../services/api';
 import { useApp } from '../context/AppContext';
 import VibeLogo from '../components/VibeLogo';
@@ -113,6 +113,7 @@ const AuthPage = ({ mode = 'login' }) => {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Verification step state
   const [step, setStep] = useState('form'); // 'form' | 'verify'
@@ -372,14 +373,36 @@ const AuthPage = ({ mode = 'login' }) => {
           </div>
           <div className="form-group">
             <label>Mot de passe</label>
-            <input
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={form.password}
+                onChange={handleChange}
+                required
+                style={{ width: '100%', paddingRight: '2.8rem' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                style={{
+                  position: 'absolute',
+                  right: '0.75rem',
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px',
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             {mode === 'register' && (
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Minimum 8 caractères requis.
@@ -393,6 +416,48 @@ const AuthPage = ({ mode = 'login' }) => {
               : <><UserPlus size={18} /> Créer mon compte</>}
           </button>
         </form>
+
+        {mode === 'login' && (
+          <div style={{
+            marginTop: '1.25rem',
+            padding: '0.85rem 1rem',
+            borderRadius: 14,
+            background: 'rgba(112,0,255,0.08)',
+            border: '1px solid rgba(112,0,255,0.22)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem',
+            textAlign: 'center',
+          }}>
+            <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              👑 Accès Rapide Super Administrateur
+            </span>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
+              Remplir automatiquement les identifiants Admin :
+            </p>
+            <button
+              type="button"
+              onClick={() => setForm({ email: 'Marwane@MR1Academy.com', password: '123Marwane456!' })}
+              style={{
+                background: 'linear-gradient(135deg, rgba(112,0,255,0.25), rgba(0,209,255,0.2))',
+                border: '1px solid rgba(167,139,250,0.4)',
+                color: '#ffffff',
+                borderRadius: 10,
+                padding: '0.55rem 1rem',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.45rem',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <ShieldCheck size={16} color="#00d1ff" /> Remplir mes identifiants Admin
+            </button>
+          </div>
+        )}
 
         {mode === 'register' && (
           <div style={{ marginTop: '1.25rem', padding: '0.85rem 1rem', background: 'rgba(112,0,255,0.06)', border: '1px solid rgba(112,0,255,0.15)', borderRadius: 12, fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
