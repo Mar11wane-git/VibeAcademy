@@ -2263,6 +2263,22 @@ html, body {
     max-width: 95vw !important;
     padding: 1.5rem 1.15rem !important;
   }
+
+  .admin-content-scroller {
+    padding: 1.25rem 0.85rem !important;
+  }
+
+  .admin-tab-nav {
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-tab-item {
+    white-space: nowrap !important;
+    flex-shrink: 0;
+  }
 }
 
 .desktop-hide {

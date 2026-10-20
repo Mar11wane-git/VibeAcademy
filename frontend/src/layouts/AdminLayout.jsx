@@ -3,15 +3,17 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   ShieldCheck, PieChart, BookOpen, Users, 
   Settings, LogOut, Bell, Search, Menu,
-  UserPlus, BookMarked, MessageCircle, X, CheckCheck
+  UserPlus, BookMarked, MessageCircle, X, CheckCheck,
+  Compass, ExternalLink, Moon, Sun, RefreshCw, LayoutGrid,
+  Calendar, Award, MessageSquare, ChevronRight
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import api from '../services/api';
 
-const AdminLayout = ({ children }) => {
+const AdminLayout = ({ children, onRefresh, isRefreshing = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useApp();
+  const { user, logout, theme, toggleTheme } = useApp();
   const [showNotif, setShowNotif] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifs, setNotifs] = useState([]);
@@ -29,12 +31,12 @@ const AdminLayout = ({ children }) => {
       const list = [];
       if (s.new_users_month > 0)
         list.push({ id: 1, icon: 'user', text: `${s.new_users_month} nouveau(x) membre(s) ce mois`, time: 'Ce mois', read: false });
-      if (s.new_enrollments_month > 0)
-        list.push({ id: 2, icon: 'book', text: `${s.new_enrollments_month} nouvelle(s) inscription(s) aux cours`, time: 'Ce mois', read: false });
-      if (s.threads > 0)
-        list.push({ id: 3, icon: 'chat', text: `${s.threads} thread(s) actif(s) dans la communauté`, time: 'Récemment', read: false });
+      if (s.enrollments > 0)
+        list.push({ id: 2, icon: 'book', text: `${s.enrollments} inscription(s) globale(s) enregistrée(s)`, time: 'En temps réel', read: false });
+      if (s.courses > 0)
+        list.push({ id: 3, icon: 'check', text: `${s.courses} formations certifiantes publiées et actives`, time: 'En ligne', read: false });
       if (s.comments > 0)
-        list.push({ id: 4, icon: 'chat', text: `${s.comments} commentaire(s) sur les cours`, time: 'Récemment', read: true });
+        list.push({ id: 4, icon: 'chat', text: `${s.comments} avis & questions dans la communauté`, time: 'Récemment', read: true });
       if (list.length === 0)
         list.push({ id: 5, icon: 'check', text: 'Tout est en ordre. Aucune alerte active.', time: 'Maintenant', read: true });
       setNotifs(list);
@@ -43,7 +45,6 @@ const AdminLayout = ({ children }) => {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifications();
   }, []);
 
@@ -63,10 +64,19 @@ const AdminLayout = ({ children }) => {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const menuItems = [
-    { icon: <PieChart size={20} />,  label: 'Dashboard',  path: '/admin' },
-    { icon: <BookOpen size={20} />,  label: 'Cours',      path: '/admin/courses' },
-    { icon: <Users size={20} />,     label: 'Apprenants', path: '/admin/users' },
+  const adminMenuItems = [
+    { icon: <PieChart size={19} />, label: 'Tableau de Bord', path: '/admin' },
+    { icon: <BookOpen size={19} />, label: 'Formations & Modules', path: '/admin/courses' },
+    { icon: <Users size={19} />, label: 'Gestion Apprenants', path: '/admin/users' },
+    { icon: <Settings size={19} />, label: 'Réglages Système', path: '/admin/settings' },
+  ];
+
+  const studentShortcuts = [
+    { icon: <LayoutGrid size={17} />, label: 'Espace Étudiant (Home)', path: '/dashboard' },
+    { icon: <Compass size={17} />, label: 'Catalogue Public', path: '/catalogue' },
+    { icon: <MessageSquare size={17} />, label: 'Communauté d\'Entraide', path: '/communaute' },
+    { icon: <Calendar size={17} />, label: 'Agenda & Ateliers', path: '/calendrier' },
+    { icon: <Award size={17} />, label: 'Certifications', path: '/certificats' },
   ];
 
   const notifIcon = (type) => {
@@ -91,62 +101,152 @@ const AdminLayout = ({ children }) => {
         />
       )}
       <aside className="admin-sidebar" style={{ zIndex: 100 }}>
-        <div className="admin-brand" onClick={() => navigate('/')}>
+        <div className="admin-brand" onClick={() => navigate('/admin')}>
           <div className="brand-logo"><ShieldCheck size={24} /></div>
-          <span>VibeCommand</span>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '1.15rem', lineHeight: 1.2 }}>MR1 Academy</span>
+            <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#a78bfa', letterSpacing: '0.8px', textTransform: 'uppercase' }}>Admin Console Pro</span>
+          </div>
         </div>
+
         <nav className="admin-nav">
-          <div className="nav-section-label">Menu Principal</div>
-          {menuItems.map(item => (
-            <div key={item.path} className={`admin-nav-item ${location.pathname === item.path ? 'active' : ''}`} onClick={() => navigate(item.path)}>
+          <div className="nav-section-label">Administration</div>
+          {adminMenuItems.map(item => (
+            <div
+              key={item.path}
+              className={`admin-nav-item ${location.pathname === item.path ? 'active' : ''}`}
+              onClick={() => navigate(item.path)}
+            >
               {item.icon}
               <span>{item.label}</span>
             </div>
           ))}
-          <div className="nav-section-label" style={{ marginTop: '2rem' }}>Paramètres</div>
-          <div className={`admin-nav-item ${location.pathname === '/admin/settings' ? 'active' : ''}`} onClick={() => navigate('/admin/settings')}>
-            <Settings size={20} />
-            <span>Réglages Système</span>
+
+          {/* ─── Switcher to Student Experience ─── */}
+          <div className="nav-section-label" style={{ marginTop: '1.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>Espace Plateforme</span>
+            <span style={{ fontSize: '0.62rem', background: 'rgba(112,0,255,0.15)', color: '#a78bfa', padding: '1px 6px', borderRadius: 6, fontWeight: 700 }}>Étudiant</span>
           </div>
+          {studentShortcuts.map(item => (
+            <div
+              key={item.path}
+              className="admin-nav-item"
+              onClick={() => navigate(item.path)}
+              style={{ fontSize: '0.86rem', opacity: 0.88 }}
+            >
+              {item.icon}
+              <span style={{ flex: 1 }}>{item.label}</span>
+              <ChevronRight size={13} style={{ opacity: 0.4 }} />
+            </div>
+          ))}
         </nav>
-        <div className="admin-user-card" onClick={handleLogout}>
-          <div className="user-avatar">{user?.name?.[0]}</div>
+
+        {/* User Card */}
+        <div className="admin-user-card" onClick={handleLogout} title="Cliquer pour vous déconnecter">
+          <div className="user-avatar">{user?.name?.[0] || 'A'}</div>
           <div className="user-info">
-            <p className="user-name">{user?.name}</p>
-            <p className="user-role">Super Administrateur</p>
+            <p className="user-name">{user?.name || 'Administrateur'}</p>
+            <p className="user-role" style={{ color: '#4ade80', fontWeight: 700 }}>Super Administrateur</p>
           </div>
-          <LogOut size={18} />
+          <LogOut size={18} style={{ opacity: 0.7 }} />
         </div>
       </aside>
 
       <div className="admin-main">
         <header className="admin-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
             <Menu size={22} className="desktop-hide" onClick={() => setSidebarOpen(p => !p)} />
-            <div className="admin-search-bar">
-              <Search size={18} />
-              <input type="text" placeholder="Rechercher cours, apprenants, logs..." />
-            </div>
+            
+            {/* Quick Switch Button to Student View */}
+            <button
+              onClick={() => navigate('/dashboard')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem 0.95rem',
+                borderRadius: '12px',
+                background: 'rgba(112, 0, 255, 0.12)',
+                border: '1px solid rgba(167, 139, 250, 0.35)',
+                color: '#ffffff',
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(112, 0, 255, 0.25)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(112, 0, 255, 0.12)'}
+              title="Tester et voir la plateforme en tant qu'étudiant"
+            >
+              <ExternalLink size={15} color="#00d1ff" />
+              <span>Voir en Mode Étudiant</span>
+            </button>
           </div>
-          <div className="admin-header-actions">
 
-            {/* ─── Notification Bell ─── */}
+          <div className="admin-header-actions">
+            {/* Live refresh data button */}
+            {onRefresh && (
+              <button
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 12,
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: isRefreshing ? '#a78bfa' : '#8b8b9c',
+                  transition: '0.2s',
+                }}
+                title="Actualiser les données en temps réel"
+              >
+                <RefreshCw size={17} className={isRefreshing ? 'spin-slow' : ''} />
+              </button>
+            )}
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 12,
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#8b8b9c',
+                transition: '0.2s',
+              }}
+              title={theme === 'dark' ? 'Passer en Mode Clair' : 'Passer en Mode Sombre'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
+            {/* Notification Bell */}
             <div ref={bellRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowNotif(v => !v)}
                 style={{
-                  width: 44, height: 44, borderRadius: 12,
+                  width: 42, height: 42, borderRadius: 12,
                   background: showNotif ? 'rgba(112,0,255,0.15)' : 'rgba(255,255,255,0.04)',
                   border: `1px solid ${showNotif ? 'rgba(112,0,255,0.4)' : 'rgba(255,255,255,0.08)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: 'pointer', color: showNotif ? '#a78bfa' : '#8b8b9c',
                   position: 'relative', transition: '0.2s'
                 }}
+                title="Notifications en direct"
               >
-                <Bell size={20} />
+                <Bell size={18} />
                 {unread > 0 && (
                   <span style={{
-                    position: 'absolute', top: -5, right: -5,
+                    position: 'absolute', top: -4, right: -4,
                     minWidth: 18, height: 18, background: '#ff0055',
                     borderRadius: 10, fontSize: 10, fontWeight: 800,
                     color: 'white', display: 'flex', alignItems: 'center',
@@ -167,7 +267,7 @@ const AdminLayout = ({ children }) => {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.1rem 1.25rem', borderBottom: '1px solid var(--glass-border)' }}>
                     <div>
-                      <p style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>Notifications</p>
+                      <p style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-main)' }}>Notifications Live</p>
                       <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>{unread} non lue(s)</p>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -201,7 +301,7 @@ const AdminLayout = ({ children }) => {
 
             <div className="admin-status-pill">
               <div className="status-dot online"></div>
-              Système Online
+              <span>En Ligne (Railway Live)</span>
             </div>
           </div>
         </header>

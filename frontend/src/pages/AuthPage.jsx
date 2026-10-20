@@ -417,48 +417,6 @@ const AuthPage = ({ mode = 'login' }) => {
           </button>
         </form>
 
-        {mode === 'login' && (
-          <div style={{
-            marginTop: '1.25rem',
-            padding: '0.85rem 1rem',
-            borderRadius: 14,
-            background: 'rgba(112,0,255,0.08)',
-            border: '1px solid rgba(112,0,255,0.22)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.5rem',
-            textAlign: 'center',
-          }}>
-            <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              👑 Accès Rapide Super Administrateur
-            </span>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
-              Remplir automatiquement les identifiants Admin :
-            </p>
-            <button
-              type="button"
-              onClick={() => setForm({ email: 'Marwane@MR1Academy.com', password: '123Marwane456!' })}
-              style={{
-                background: 'linear-gradient(135deg, rgba(112,0,255,0.25), rgba(0,209,255,0.2))',
-                border: '1px solid rgba(167,139,250,0.4)',
-                color: '#ffffff',
-                borderRadius: 10,
-                padding: '0.55rem 1rem',
-                fontSize: '0.82rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.45rem',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <ShieldCheck size={16} color="#00d1ff" /> Remplir mes identifiants Admin
-            </button>
-          </div>
-        )}
-
         {mode === 'register' && (
           <div style={{ marginTop: '1.25rem', padding: '0.85rem 1rem', background: 'rgba(112,0,255,0.06)', border: '1px solid rgba(112,0,255,0.15)', borderRadius: 12, fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Mail size={14} style={{ color: '#a78bfa', flexShrink: 0 }} />
