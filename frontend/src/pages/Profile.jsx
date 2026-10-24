@@ -356,7 +356,7 @@ const Profile = () => {
       </AnimatePresence>
 
       {/* Top Header Banner */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+      <div className="profile-top-banner" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.3rem 0.8rem', borderRadius: '99px', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.3)', color: '#c4b5fd', fontSize: '0.74rem', fontWeight: 800, marginBottom: '0.6rem', textTransform: 'uppercase' }}>
             <Sparkles size={13} /> Espace Développeur & Portfolio Certifié
@@ -369,7 +369,7 @@ const Profile = () => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+        <div className="profile-top-actions" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button
             onClick={handleSharePortfolio}
             className="btn-pro"
@@ -393,7 +393,7 @@ const Profile = () => {
       </div>
 
       {/* Main Layout Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 370px) 1fr', gap: '2rem', alignItems: 'start' }}>
+      <div className="profile-main-grid">
 
         {/* ══════════ LEFT COLUMN : DEVELOPER IDENTITY CARD ══════════ */}
         <div style={{
@@ -593,8 +593,23 @@ const Profile = () => {
 
         {/* ══════════ RIGHT COLUMN : TABS & INTERACTIVE WORKSPACE ══════════ */}
         <div>
-          {/* Navigation Tabs */}
-          <div style={{
+          {/* Mobile Tab Select Dropdown (Touch-friendly 1-tap navigation for phones) */}
+          <div className="profile-mobile-tab-select-wrap">
+            <select
+              className="profile-mobile-tab-select"
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              aria-label="Sélectionner l'onglet"
+            >
+              <option value="overview">📂 Aperçu & Progression</option>
+              <option value="certificates">🏆 Certificats & Badges ({certifiedCourses.length})</option>
+              <option value="activity">🕒 Journal d'Activité ({activities.length})</option>
+              <option value="settings">⚙️ Paramètres & Sécurité</option>
+            </select>
+          </div>
+
+          {/* Navigation Tabs (Desktop & Tablet) */}
+          <div className="profile-desktop-tabs" style={{
             display: 'flex', gap: '0.5rem', marginBottom: '1.5rem',
             background: 'var(--bg-secondary)', padding: '0.4rem',
             borderRadius: '16px', border: '1px solid var(--glass-border)',
@@ -630,7 +645,7 @@ const Profile = () => {
           {activeTab === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               {/* 4 KPI Stat Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+              <div className="profile-kpi-grid">
                 <div style={{ background: 'var(--bg-secondary)', padding: '1.35rem', borderRadius: '20px', border: '1px solid var(--glass-border)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Playlists Suivies</span>
@@ -839,7 +854,7 @@ const Profile = () => {
                     </button>
                   </div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1rem' }}>
+                  <div className="profile-cert-grid">
                     {certifiedCourses.map(cert => (
                       <div
                         key={cert.course_id}
@@ -1017,7 +1032,7 @@ const Profile = () => {
                 </div>
               )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="profile-form-grid-2">
                 <div className="form-group">
                   <label><User size={15} /> Nom Complet (affiché sur vos certificats)</label>
                   <input
@@ -1041,7 +1056,7 @@ const Profile = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="profile-form-grid-2">
                 <div className="form-group">
                   <label><Briefcase size={15} /> Titre / Spécialisation</label>
                   <select
@@ -1084,7 +1099,7 @@ const Profile = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+              <div className="profile-form-grid-3">
                 <div className="form-group">
                   <label><Code2 size={15} /> Lien GitHub</label>
                   <input
@@ -1119,7 +1134,7 @@ const Profile = () => {
                 Sécurité : Changer le mot de passe (laisser vide si inchangé)
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="profile-form-grid-2">
                 <div className="form-group">
                   <label><Lock size={15} /> Nouveau Mot de Passe</label>
                   <input

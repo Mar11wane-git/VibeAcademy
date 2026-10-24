@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 const VibeLogo = ({ size = 40, showText = true, showBadge = true, onClick, style = {} }) => {
   return (
@@ -79,10 +79,10 @@ const VibeLogo = ({ size = 40, showText = true, showBadge = true, onClick, style
       </div>
 
       {showText && (
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.05 }}>
+        <div className="vibe-logo-text-wrap" style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.05 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <span
-              className="brand-font"
+              className="brand-font vibe-logo-text"
               style={{
                 fontSize: size >= 40 ? '1.25rem' : '1.1rem',
                 fontWeight: 900,

@@ -1842,6 +1842,121 @@ html, body {
   overflow-x: hidden;
 }
 
+/* ── Mobile Navigation Select & Profile Responsive Foundation ── */
+.header-mobile-select-wrap {
+  display: none;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  max-width: 180px;
+  min-width: 110px;
+  margin: 0 0.4rem;
+}
+
+.header-mobile-nav-select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  color: #ffffff;
+  padding: 0.45rem 1.65rem 0.45rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300d1ff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.55rem center;
+  background-size: 13px;
+  box-shadow: 0 2px 12px rgba(112, 0, 255, 0.16);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.header-mobile-nav-select:focus {
+  border-color: #00d1ff;
+  box-shadow: 0 0 14px rgba(0, 209, 255, 0.35);
+}
+
+.header-mobile-nav-select option {
+  background: #0b0d1b;
+  color: #ffffff;
+  font-size: 0.88rem;
+  padding: 0.5rem;
+}
+
+.header-mobile-toggle {
+  display: none;
+}
+
+/* Profile Responsive Foundation */
+.profile-main-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 360px) 1fr;
+  gap: 2rem;
+  align-items: start;
+  width: 100%;
+}
+
+.profile-mobile-tab-select-wrap {
+  display: none;
+  margin-bottom: 1.25rem;
+}
+
+.profile-mobile-tab-select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 209, 255, 0.4);
+  color: #ffffff;
+  padding: 0.75rem 2rem 0.75rem 1rem;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  outline: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300d1ff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 16px;
+  box-shadow: 0 4px 15px rgba(0, 209, 255, 0.15);
+}
+
+.profile-mobile-tab-select option {
+  background: #0b0d1b;
+  color: #ffffff;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+
+.profile-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.profile-cert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 1rem;
+}
+
+.profile-form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.profile-form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
 /* ── 2. Touch Friendly Inputs (Prevents iOS Safari auto-zoom) ── */
 @media (max-width: 768px) {
   input[type="text"],
@@ -1983,9 +2098,20 @@ html, body {
   div[style*="minmax(0, 1fr) 330px"],
   div[style*="minmax(0, 1fr) 320px"],
   div[style*="minmax(320px, 370px) 1fr"],
-  div[style*="minmax(0, 1.55fr) minmax(300px, 1fr)"] {
+  div[style*="minmax(0, 1.55fr) minmax(300px, 1fr)"],
+  div[style*="minmax(280px, 1fr) minmax(320px, 1.15fr)"] {
     grid-template-columns: 1fr !important;
     gap: 1.5rem !important;
+  }
+}
+
+/* Modal Form Grids Collapse on Mobile */
+@media (max-width: 640px) {
+  div[style*="gridTemplateColumns: '1fr 1fr'"],
+  div[style*="gridTemplateColumns: '1fr 1fr 1fr'"],
+  div[style*="gridTemplateColumns: '1fr 160px'"] {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
   }
 }
 
@@ -1993,11 +2119,80 @@ html, body {
 @media (max-width: 768px) {
   .header {
     height: 64px !important;
-    padding: 0 0.9rem !important;
+    padding: 0 0.85rem !important;
+    gap: 0.45rem !important;
+  }
+
+  .header-mobile-select-wrap {
+    display: flex !important;
   }
 
   .header-search-wrap {
     display: none !important;
+  }
+
+  .header-profile-info,
+  .header-profile-chevron {
+    display: none !important;
+  }
+
+  .header-profile-btn {
+    padding: 0.2rem !important;
+    border-radius: 50% !important;
+    gap: 0 !important;
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .header-mobile-toggle {
+    display: flex !important;
+  }
+
+  .mobile-header-drawer {
+    top: 64px !important;
+  }
+
+  /* Profile Page Mobile Responsiveness */
+  .profile-main-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .profile-mobile-tab-select-wrap {
+    display: block !important;
+  }
+
+  .profile-desktop-tabs {
+    display: none !important;
+  }
+
+  .profile-form-grid-2,
+  .profile-form-grid-3 {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+
+  .profile-top-banner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 1.25rem !important;
+  }
+
+  .profile-top-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.65rem !important;
+  }
+
+  .profile-top-actions button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .profile-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem !important;
   }
 
   .top-nav {
@@ -2222,6 +2417,30 @@ html, body {
 
 /* ── 5. Small Phones (max-width: 480px) ── */
 @media (max-width: 480px) {
+  .header {
+    padding: 0 0.55rem !important;
+    gap: 0.35rem !important;
+  }
+
+  .header-mobile-select-wrap {
+    max-width: 140px !important;
+    min-width: 90px !important;
+    margin: 0 0.2rem !important;
+  }
+
+  .header-mobile-nav-select {
+    font-size: 0.74rem !important;
+    padding: 0.35rem 1.35rem 0.35rem 0.45rem !important;
+  }
+
+  .vibe-logo-text-wrap {
+    display: none !important;
+  }
+
+  .profile-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+
   .page-view {
     padding: 1rem 0.65rem !important;
   }

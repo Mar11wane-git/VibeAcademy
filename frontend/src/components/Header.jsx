@@ -589,6 +589,21 @@ const Header = () => {
 
   const currentPath = location.pathname;
 
+  const getActiveSelectValue = () => {
+    if (currentPath === '/admin' || currentPath.startsWith('/admin/')) return '/admin';
+    if (currentPath === '/profile') return '/profile';
+    if (currentPath === '/settings') return '/settings';
+    if (currentPath === '/catalogue' || currentPath.startsWith('/course/')) return '/catalogue';
+    if (currentPath === '/mes-cours' || currentPath.startsWith('/courses/')) return '/mes-cours';
+    if (currentPath === '/agenda') return '/agenda';
+    if (currentPath === '/communaute') return '/communaute';
+    if (currentPath === '/favoris') return '/favoris';
+    if (currentPath === '/certificats') return '/certificats';
+    if (currentPath === '/contact' || currentPath === '/support') return '/contact';
+    if (currentPath === '/apropos' || currentPath === '/about') return '/apropos';
+    return '/dashboard';
+  };
+
   return (
     <header
       className="header"
@@ -598,7 +613,7 @@ const Header = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        gap: '1rem',
+        gap: '0.75rem',
         background: 'rgba(7, 7, 18, 0.88)',
         backdropFilter: 'blur(22px)',
         borderBottom: '1px solid var(--glass-border)',
@@ -612,6 +627,27 @@ const Header = () => {
         size={38}
         onClick={() => navigate('/dashboard')}
       />
+
+      {/* 1.5 Mobile Quick Page Select (One-tap page switcher for mobile) */}
+      <div className="header-mobile-select-wrap">
+        <select
+          className="header-mobile-nav-select"
+          value={getActiveSelectValue()}
+          onChange={(e) => navigate(e.target.value)}
+          aria-label="Navigation rapide"
+        >
+          <option value="/dashboard">📊 Dashboard</option>
+          <option value="/catalogue">📚 Catalogue (24)</option>
+          <option value="/mes-cours">🎓 Mes Cours</option>
+          <option value="/agenda">📅 Agenda & Live</option>
+          <option value="/communaute">💬 Communauté</option>
+          <option value="/favoris">🔖 Favoris</option>
+          <option value="/certificats">🏆 Certificats</option>
+          <option value="/profile">👤 Mon Profil</option>
+          <option value="/settings">⚙️ Paramètres</option>
+          {user?.is_admin && <option value="/admin">🛡️ Administration</option>}
+        </select>
+      </div>
 
       {/* 2. Center: Unified Single-Line Navigation Pill Bar */}
       <nav
@@ -835,6 +871,7 @@ const Header = () => {
         <div ref={profileRef} style={{ position: 'relative' }}>
           <button
             onClick={toggleProfile}
+            className="header-profile-btn"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -854,7 +891,7 @@ const Header = () => {
             }}>
               {user?.name?.[0]?.toUpperCase() || 'U'}
             </div>
-            <div style={{ textAlign: 'left', maxWidth: '115px' }}>
+            <div className="header-profile-info" style={{ textAlign: 'left', maxWidth: '115px' }}>
               <p style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {user?.name || 'Étudiant'}
               </p>
@@ -862,7 +899,9 @@ const Header = () => {
                 {user?.is_admin ? 'Admin Pro' : (lang === 'fr' ? 'Membre Pro' : 'Pro Member')}
               </p>
             </div>
-            <ChevronDown size={14} color="var(--text-muted)" style={{ transition: 'transform 0.2s', transform: showProfile ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+            <span className="header-profile-chevron" style={{ display: 'flex', alignItems: 'center' }}>
+              <ChevronDown size={14} color="var(--text-muted)" style={{ transition: 'transform 0.2s', transform: showProfile ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+            </span>
           </button>
           {showProfile && <ProfileDropdown user={user} onClose={() => setShowProfile(false)} />}
         </div>
@@ -878,7 +917,6 @@ const Header = () => {
             borderRadius: '12px',
             background: 'rgba(255, 255, 255, 0.05)',
             border: '1px solid var(--glass-border)',
-            display: 'none',
             alignItems: 'center',
             justifyContent: 'center',
             color: 'white',
@@ -908,7 +946,7 @@ const Header = () => {
             className="mobile-header-drawer"
             style={{
               position: 'fixed',
-              top: '78px',
+              top: '64px',
               left: 0,
               right: 0,
               bottom: 0,
