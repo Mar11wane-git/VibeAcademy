@@ -15,20 +15,20 @@ use Illuminate\Validation\Rules\Password;
 class AuthController extends Controller
 {
     /**
-     * Step 1: Register — create user (unverified) & send code
+     * Step 1: Register — create user (unverified) & send real OTP to their email
      */
     public function register(Request $request)
     {
         $data = $request->validate([
             'name'     => 'required|string|min:3|max:255',
-            'email'    => 'required|email|unique:users,email',
+            'email'    => 'required|string|email:rfc,filter|max:255|unique:users,email',
             'password' => 'required|string|min:8',
         ], [
             'name.required'     => 'Le nom est requis.',
             'name.min'          => 'Le nom doit contenir au moins 3 caractères.',
             'email.required'    => "L'adresse e-mail est requise.",
-            'email.email'       => "L'adresse e-mail n'est pas valide.",
-            'email.unique'      => 'Cette adresse e-mail est déjà utilisée.',
+            'email.email'       => "L'adresse e-mail saisie n'est pas valide ou le domaine n'existe pas.",
+            'email.unique'      => 'Cette adresse e-mail est déjà utilisée. Veuillez vous connecter.',
             'password.required' => 'Le mot de passe est requis.',
             'password.min'      => 'Le mot de passe doit contenir au moins 8 caractères.',
         ]);
@@ -36,7 +36,14 @@ class AuthController extends Controller
         $cleanEmail = strtolower(trim($data['email']));
         $cleanName  = trim($data['name']);
 
-        // Generate 6-digit code
+        // Extra check: ensure email has a real domain structure (e.g. user@domain.com)
+        if (!preg_match('/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $cleanEmail)) {
+            return response()->json([
+                'message' => "L'adresse e-mail doit être une adresse réelle et valide avec un nom de domaine existant."
+            ], 422);
+        }
+
+        // Generate 6-digit OTP code
         $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $user = User::create([
@@ -48,21 +55,20 @@ class AuthController extends Controller
             'email_verified_at'           => null,
         ]);
 
-        // Send verification email
+        // Send real OTP email to user's inbox
         $mailSent = false;
         try {
             Mail::to($user->email)->send(new VerificationCodeMail($code, $user->name));
             $mailSent = true;
         } catch (\Throwable $e) {
-            \Log::error('Mail send failed: ' . $e->getMessage());
+            \Log::error('Mail send failed during registration: ' . $e->getMessage());
         }
 
         return response()->json([
-            'message'    => $mailSent 
-                ? ('Un code de vérification a été envoyé à ' . $user->email)
-                : ('Votre code de vérification est : ' . $code),
-            'email'      => $user->email,
-            'code'       => $code,
+            'message'            => $mailSent 
+                ? ('Un code de vérification à 6 chiffres a été envoyé à ' . $user->email . '. Veuillez vérifier votre boîte de réception pour accéder à votre compte.')
+                : ('Un code de vérification a été généré pour ' . $user->email . '. Veuillez vérifier votre boîte de réception.'),
+            'email'              => $user->email,
             'needs_verification' => true,
         ], 201);
     }
@@ -73,7 +79,7 @@ class AuthController extends Controller
     public function verifyEmail(Request $request)
     {
         $data = $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|email:rfc,filter',
             'code'  => 'required|string|size:6',
         ], [
             'email.required' => "L'adresse e-mail est requise.",
@@ -91,15 +97,15 @@ class AuthController extends Controller
         }
 
         if ($user->email_verified_at) {
-            return response()->json(['message' => 'Ce compte est déjà vérifié.'], 400);
+            return response()->json(['message' => 'Ce compte est déjà vérifié. Vous pouvez vous connecter.'], 400);
         }
 
         if (trim((string)$user->email_verification_code) !== $cleanCode) {
-            return response()->json(['message' => 'Code de vérification incorrect.'], 422);
+            return response()->json(['message' => 'Code de vérification incorrect. Veuillez vérifier le code reçu par e-mail.'], 422);
         }
 
         if ($user->verification_code_expires_at && now()->gt($user->verification_code_expires_at)) {
-            return response()->json(['message' => 'Ce code a expiré. Veuillez cliquer sur Renvoyer.'], 422);
+            return response()->json(['message' => 'Ce code a expiré. Veuillez cliquer sur Renvoyer un nouveau code.'], 422);
         }
 
         // Activate the account
@@ -123,7 +129,7 @@ class AuthController extends Controller
      */
     public function resendCode(Request $request)
     {
-        $data = $request->validate(['email' => 'required|email']);
+        $data = $request->validate(['email' => 'required|email:rfc,filter']);
         $cleanEmail = strtolower(trim($data['email']));
         $user = User::whereRaw('LOWER(email) = ?', [$cleanEmail])->whereNull('email_verified_at')->first();
 
@@ -147,8 +153,9 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => $mailSent ? ('Un nouveau code a été envoyé à ' . $user->email) : ('Votre nouveau code est : ' . $code),
-            'code'    => $code,
+            'message' => $mailSent 
+                ? ('Un nouveau code a été envoyé à ' . $user->email . '. Veuillez vérifier votre boîte de réception.')
+                : ('Un nouveau code a été généré. Veuillez vérifier votre boîte de réception.'),
         ]);
     }
 
@@ -158,7 +165,7 @@ class AuthController extends Controller
             'email'    => 'required|string',
             'password' => 'required|string',
         ], [
-            'email.required'    => "L'identifiant ou l'adresse e-mail est requis.",
+            'email.required'    => "L'adresse e-mail est requise.",
             'password.required' => 'Le mot de passe est requis.',
         ]);
 
@@ -167,31 +174,35 @@ class AuthController extends Controller
             $cleanEmail = 'marwane@mr1academy.com';
         }
 
+        // 1. Mandatory check: email must exist in the database
         $user = User::whereRaw('LOWER(email) = ?', [$cleanEmail])->first();
+        if (!$user) {
+            return response()->json([
+                'message' => "Cette adresse e-mail n'existe pas dans notre base de données. Veuillez créer un compte.",
+                'email_not_found' => true
+            ], 404);
+        }
 
-        $passwordValid = false;
-        if ($user) {
-            $passwordValid = Hash::check($data['password'], $user->password);
-            // Allow friendly variations for admin to prevent mobile keyboard capitalization/symbol pain
-            if (!$passwordValid && $user->is_admin) {
-                $trimmedInput = trim($data['password']);
-                $adminFallbacks = [
-                    '123marwane456!',
-                    '123marwane456',
-                    '123Marwane456',
-                    '123Marwane456!',
-                    'admin123',
-                    'admin',
-                    'password'
-                ];
-                if (in_array(strtolower($trimmedInput), array_map('strtolower', $adminFallbacks))) {
-                    $passwordValid = true;
-                }
+        // 2. Password check
+        $passwordValid = Hash::check($data['password'], $user->password);
+        if (!$passwordValid && $user->is_admin) {
+            $trimmedInput = trim($data['password']);
+            $adminFallbacks = [
+                '123marwane456!',
+                '123marwane456',
+                '123Marwane456',
+                '123Marwane456!',
+                'admin123',
+                'admin',
+                'password'
+            ];
+            if (in_array(strtolower($trimmedInput), array_map('strtolower', $adminFallbacks))) {
+                $passwordValid = true;
             }
         }
 
-        if (!$user || !$passwordValid) {
-            return response()->json(['message' => 'E-mail ou mot de passe incorrect. Vérifiez vos identifiants.'], 401);
+        if (!$passwordValid) {
+            return response()->json(['message' => 'Mot de passe incorrect. Vérifiez vos identifiants.'], 401);
         }
 
         // Maintenance Check: Block regular users during maintenance
@@ -204,25 +215,29 @@ class AuthController extends Controller
             ], 503);
         }
 
-        // Auto-verify admin users or official academy domain accounts
+        // 3. Email verification requirement: if account is not verified, send OTP to their email and require verification
         if (!$user->email_verified_at) {
-            if ($user->is_admin || str_ends_with(strtolower($user->email), '@mr1academy.com')) {
-                $user->update(['email_verified_at' => now()]);
-            } else {
-                $code = $user->email_verification_code ?: str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-                if (!$user->email_verification_code) {
-                    $user->update([
-                        'email_verification_code'      => $code,
-                        'verification_code_expires_at' => now()->addMinutes(30),
-                    ]);
-                }
-                return response()->json([
-                    'message'            => 'Votre code de vérification est : ' . $code,
-                    'needs_verification' => true,
-                    'email'              => $user->email,
-                    'code'               => $code,
-                ], 403);
+            $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $user->update([
+                'email_verification_code'      => $code,
+                'verification_code_expires_at' => now()->addMinutes(30),
+            ]);
+
+            $mailSent = false;
+            try {
+                Mail::to($user->email)->send(new VerificationCodeMail($code, $user->name));
+                $mailSent = true;
+            } catch (\Throwable $e) {
+                \Log::error('Mail login verification send failed: ' . $e->getMessage());
             }
+
+            return response()->json([
+                'message'            => $mailSent
+                    ? ('Votre compte nécessite une vérification. Un code OTP a été envoyé à ' . $user->email . ' pour accéder au compte.')
+                    : ('Votre compte nécessite une vérification. Veuillez vérifier votre boîte de réception.'),
+                'needs_verification' => true,
+                'email'              => $user->email,
+            ], 403);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;

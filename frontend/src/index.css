@@ -2284,3 +2284,260 @@ html, body {
 .desktop-hide {
   display: none;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   3D DEPTH LAYER — tilt surfaces, layered shadows, pressable buttons, hero stage
+   Tilt angles (--rx / --ry) and glare position (--mx / --my) come from utils/tilt3d.js
+   ══════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --depth-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 2px 4px rgba(0, 0, 0, 0.35),
+    0 14px 28px -8px rgba(0, 0, 0, 0.6),
+    0 30px 60px -20px rgba(76, 29, 149, 0.45);
+  --depth-shadow-lifted:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.35),
+    0 26px 44px -10px rgba(0, 0, 0, 0.7),
+    0 50px 90px -24px rgba(124, 58, 237, 0.55);
+  --btn-edge: #4c1d95;
+  --title-extrude-1: rgba(167, 139, 250, 0.55);
+  --title-extrude-2: rgba(109, 40, 217, 0.45);
+  --title-extrude-3: rgba(76, 29, 149, 0.4);
+}
+
+body.light-mode {
+  --depth-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(15, 23, 42, 0.08),
+    0 10px 22px -8px rgba(15, 23, 42, 0.16),
+    0 24px 48px -20px rgba(124, 58, 237, 0.22);
+  --depth-shadow-lifted:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 3px 6px rgba(15, 23, 42, 0.1),
+    0 22px 40px -10px rgba(15, 23, 42, 0.22),
+    0 40px 70px -24px rgba(124, 58, 237, 0.3);
+  --title-extrude-1: rgba(167, 139, 250, 0.45);
+  --title-extrude-2: rgba(139, 92, 246, 0.3);
+  --title-extrude-3: rgba(124, 58, 237, 0.2);
+}
+
+/* Tilting surfaces */
+.tilt-surface, .tilt-surface:hover,
+.course-card, .course-card:hover,
+.stat-box, .stat-box:hover,
+.admin-stat-card, .admin-stat-card:hover,
+.hero-glass, .hero-glass:hover {
+  --rx: 0deg;
+  --ry: 0deg;
+  --lift: 0px;
+  transform: perspective(1000px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(var(--lift));
+  box-shadow: var(--depth-shadow);
+  transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease, border-color 0.3s ease;
+}
+
+.tilt-surface:hover, .course-card:hover, .stat-box:hover,
+.admin-stat-card:hover, .hero-glass:hover {
+  --lift: -6px;
+  box-shadow: var(--depth-shadow-lifted);
+}
+
+/* Glass cards double as modals and forms: give them depth, but keep them still */
+.glass-card {
+  box-shadow: var(--depth-shadow);
+}
+
+/* While the cursor drives the tilt, follow it closely instead of easing */
+.is-tilting {
+  transition: transform 0.08s linear, box-shadow 0.4s ease, border-color 0.3s ease !important;
+  will-change: transform;
+}
+
+/* Moving light glare */
+.tilt-surface, .course-card, .stat-box, .admin-stat-card, .hero-glass {
+  position: relative;
+}
+
+.tilt-surface::after, .course-card::after, .stat-box::after,
+.admin-stat-card::after, .hero-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 0%), rgba(255, 255, 255, 0.14), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 5;
+}
+
+.is-tilting::after {
+  opacity: 1;
+}
+
+body.light-mode .tilt-surface::after, body.light-mode .course-card::after,
+body.light-mode .stat-box::after, body.light-mode .admin-stat-card::after,
+body.light-mode .hero-glass::after {
+  background: radial-gradient(circle at var(--mx, 50%) var(--my, 0%), rgba(255, 255, 255, 0.7), transparent 55%);
+}
+
+/* Pressable 3D buttons */
+.btn-pro-primary {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2),
+    0 4px 0 var(--btn-edge),
+    0 10px 22px rgba(124, 58, 237, 0.4);
+}
+
+.btn-pro-primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2),
+    0 6px 0 var(--btn-edge),
+    0 18px 32px rgba(124, 58, 237, 0.5);
+}
+
+.btn-pro-primary:active {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 1px 0 var(--btn-edge),
+    0 4px 10px rgba(124, 58, 237, 0.35);
+  transition-duration: 0.05s;
+}
+
+.btn-pro-outline {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 4px 0 rgba(139, 92, 246, 0.25);
+}
+
+.btn-pro-outline:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 6px 0 rgba(139, 92, 246, 0.3), 0 0 20px rgba(139, 92, 246, 0.25);
+}
+
+.btn-pro-outline:active {
+  transform: translateY(3px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 0 rgba(139, 92, 246, 0.3);
+  transition-duration: 0.05s;
+}
+
+/* Extruded headline */
+.landing-title {
+  text-shadow:
+    0 1px 0 var(--title-extrude-1),
+    0 2px 0 var(--title-extrude-2),
+    0 3px 0 var(--title-extrude-2),
+    0 4px 0 var(--title-extrude-3),
+    0 5px 0 var(--title-extrude-3),
+    0 14px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* Gradient-clipped text can't take text-shadow (it paints over the fill), so extrude with filters */
+.landing-title span {
+  text-shadow: none;
+  filter: drop-shadow(0 3px 0 var(--title-extrude-2)) drop-shadow(0 5px 0 var(--title-extrude-3)) drop-shadow(0 14px 18px rgba(0, 0, 0, 0.35));
+}
+
+.page-title {
+  text-shadow: 0 1px 0 var(--title-extrude-1), 0 3px 0 var(--title-extrude-3), 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Hero 3D stage */
+.hero-3d-stage {
+  --rx: 0deg;
+  --ry: 0deg;
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  transform-style: preserve-3d;
+  transform: perspective(1200px) rotateX(calc(var(--rx) + 4deg)) rotateY(calc(var(--ry) - 10deg));
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.hero-3d-stage .main-graphic-img {
+  transform: translateZ(0);
+  box-shadow:
+    0 2px 0 rgba(139, 92, 246, 0.35),
+    0 30px 60px -10px rgba(0, 0, 0, 0.75),
+    0 60px 120px -30px rgba(124, 58, 237, 0.6);
+}
+
+.hero-3d-stage .glass-floating-card {
+  z-index: 3;
+  animation-name: float-3d;
+}
+
+.hero-3d-stage .fc-1 { --z: 120px; }
+.hero-3d-stage .fc-2 { --z: 80px; }
+
+@keyframes float-3d {
+  0%, 100% { transform: translateZ(var(--z)) translateY(0); }
+  50% { transform: translateZ(var(--z)) translateY(-18px); }
+}
+
+.hero-orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(620px, 115%);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%) translateZ(-40px);
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.orbit-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(139, 92, 246, 0.35);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.2), inset 0 0 30px rgba(236, 72, 153, 0.12);
+}
+
+/* A glowing satellite on each ring makes the rotation visible */
+.orbit-ring::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: calc(50% - 7px);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff, var(--accent-glow) 45%, var(--accent-main));
+  box-shadow: 0 0 18px var(--accent-glow), 0 0 40px rgba(139, 92, 246, 0.6);
+}
+
+.ring-a { --tilt: rotateX(74deg) rotateY(0deg); animation: orbit-spin 16s linear infinite; }
+.ring-b { --tilt: rotateX(66deg) rotateY(58deg); animation: orbit-spin 22s linear infinite reverse; inset: 7%; border-color: rgba(236, 72, 153, 0.35); }
+.ring-c { --tilt: rotateX(62deg) rotateY(-52deg); animation: orbit-spin 28s linear infinite; inset: 14%; border-color: rgba(59, 130, 246, 0.35); }
+
+.ring-b::before { background: radial-gradient(circle at 35% 35%, #fff, #f9a8d4 45%, var(--accent-pink)); box-shadow: 0 0 18px #f9a8d4, 0 0 40px rgba(236, 72, 153, 0.6); }
+.ring-c::before { background: radial-gradient(circle at 35% 35%, #fff, #93c5fd 45%, var(--accent-blue)); box-shadow: 0 0 18px #93c5fd, 0 0 40px rgba(59, 130, 246, 0.6); }
+
+@keyframes orbit-spin {
+  from { transform: var(--tilt) rotateZ(0deg); }
+  to { transform: var(--tilt) rotateZ(360deg); }
+}
+
+body.light-mode .orbit-ring { box-shadow: 0 0 24px rgba(139, 92, 246, 0.15); }
+
+@media (max-width: 768px) {
+  .hero-3d-stage {
+    flex-direction: column;
+    align-items: center;
+    transform: perspective(1200px) rotateX(4deg);
+  }
+
+  .hero-orbit {
+    width: min(360px, 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-ring, .hero-3d-stage .glass-floating-card {
+    animation: none;
+  }
+}

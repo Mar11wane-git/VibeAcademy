@@ -173,9 +173,15 @@ const LandingPage = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="hero-graphics"
         >
+          <div className="hero-3d-stage" data-tilt="14">
+          <div className="hero-orbit" aria-hidden="true">
+            <span className="orbit-ring ring-a" />
+            <span className="orbit-ring ring-b" />
+            <span className="orbit-ring ring-c" />
+          </div>
           <motion.div
             className="glass-floating-card fc-1"
-            whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(139,92,246,0.5)' }}
+            whileHover={{ boxShadow: '0 0 30px rgba(139,92,246,0.5)' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={{ background: 'rgba(59, 130, 246, 0.2)', padding: '0.75rem', borderRadius: '12px' }}>
@@ -192,7 +198,7 @@ const LandingPage = () => {
 
           <motion.div
             className="glass-floating-card fc-2"
-            whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(236,72,153,0.5)' }}
+            whileHover={{ boxShadow: '0 0 30px rgba(236,72,153,0.5)' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={{ background: 'rgba(236, 72, 153, 0.2)', padding: '0.75rem', borderRadius: '12px' }}>
@@ -204,6 +210,7 @@ const LandingPage = () => {
               </div>
             </div>
           </motion.div>
+          </div>
         </motion.div>
       </div>
 
@@ -223,9 +230,9 @@ const LandingPage = () => {
 
         <div className="landing-cards-grid" style={{ display: 'grid', gap: '1.75rem' }}>
           {COURSE_COVER_PRESETS.slice(0, 6).map((preset, i) => (
-            <motion.div
+            <div
               key={i}
-              whileHover={{ y: -6 }}
+              className="tilt-surface"
               onClick={() => navigate('/register')}
               style={{
                 background: 'var(--bg-secondary)',
@@ -256,7 +263,7 @@ const LandingPage = () => {
                   <ChevronRight size={18} />
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
@@ -276,7 +283,7 @@ const LandingPage = () => {
               { icon: Calendar, title: 'Agenda Pro RFC 5545', desc: 'Planifiez vos révisions avec Drag & Drop, export iCalendar (.ics) et synchronisation Google/Outlook.' },
               { icon: Shield, title: 'Certification Vérifiable', desc: 'Débloquez le Feu Vert à 100%, validez le quiz technique et téléchargez votre diplôme officiel.' }
             ].map((f, i) => (
-              <div key={i} style={{ background: 'var(--bg-tertiary)', padding: '2rem', borderRadius: '20px', border: '1px solid var(--glass-border)', textAlign: 'left' }}>
+              <div key={i} className="tilt-surface" style={{ background: 'var(--bg-tertiary)', padding: '2rem', borderRadius: '20px', border: '1px solid var(--glass-border)', textAlign: 'left' }}>
                 <div style={{ width: 50, height: 50, borderRadius: '12px', background: 'rgba(139, 92, 246, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', color: 'var(--accent-main)' }}>
                   <f.icon size={24} />
                 </div>
@@ -336,6 +343,7 @@ const LandingPage = () => {
             ].map((card, idx) => (
               <div
                 key={idx}
+                className="tilt-surface"
                 style={{
                   background: 'var(--bg-secondary)',
                   border: '1px solid var(--glass-border)',

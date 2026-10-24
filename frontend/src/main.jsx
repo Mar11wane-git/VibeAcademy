@@ -4,6 +4,9 @@ import './index.css'
 import App from './App.jsx'
 
 import { AppProvider } from './context/AppContext.jsx'
+import { initTilt3D } from './utils/tilt3d.js'
+
+initTilt3D()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

@@ -151,9 +151,7 @@ const AuthPage = ({ mode = 'login' }) => {
       // Register → needs verification
       if (res.data.needs_verification) {
         setPendingEmail(res.data.email || cleanEmail);
-        if (res.data.code) {
-          setOtpCode(String(res.data.code));
-        }
+        setOtpCode('');
         setStep('verify');
         return;
       }
@@ -169,9 +167,7 @@ const AuthPage = ({ mode = 'login' }) => {
       // Login blocked because not verified
       if (data?.needs_verification) {
         setPendingEmail(data.email || cleanEmail);
-        if (data.code) {
-          setOtpCode(String(data.code));
-        }
+        setOtpCode('');
         setStep('verify');
         return;
       }
@@ -189,7 +185,7 @@ const AuthPage = ({ mode = 'login' }) => {
   const handleVerify = async (e) => {
     e.preventDefault();
     const cleanCode = String(otpCode).replace(/\D/g, '').slice(0, 6);
-    if (cleanCode.length < 6) { setError('Entrez les 6 chiffres du code.'); return; }
+    if (cleanCode.length < 6) { setError('Entrez les 6 chiffres du code reçu par e-mail.'); return; }
     setLoading(true);
     setError('');
     try {
@@ -214,14 +210,10 @@ const AuthPage = ({ mode = 'login' }) => {
     setCodeExpired(false);
     try {
       const cleanEmail = pendingEmail.trim().toLowerCase();
-      const res = await api.post('/resend-code', { email: cleanEmail });
-      if (res.data.code) {
-        setOtpCode(String(res.data.code));
-      } else {
-        setOtpCode('');
-      }
+      await api.post('/resend-code', { email: cleanEmail });
+      setOtpCode('');
       setResendSuccess(true);
-      setTimeout(() => setResendSuccess(false), 4000);
+      setTimeout(() => setResendSuccess(false), 5000);
     } catch (err) {
       setError(err.response?.data?.message || "Impossible d'envoyer le code.");
     } finally {
@@ -249,26 +241,34 @@ const AuthPage = ({ mode = 'login' }) => {
 
           <h2 className="auth-title brand-font" style={{ marginBottom: '0.5rem' }}>Vérifiez votre e-mail</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
-            Un code à 6 chiffres a été généré pour
+            Un code secret de vérification à 6 chiffres a été envoyé à
           </p>
-          <p style={{ color: '#a78bfa', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.5rem', wordBreak: 'break-all' }}>
+          <p style={{ color: '#00d1ff', fontWeight: 800, fontSize: '0.98rem', marginBottom: '0.5rem', wordBreak: 'break-all' }}>
             {pendingEmail}
           </p>
 
-          {otpCode && (
-            <div style={{
-              background: 'rgba(112,0,255,0.12)',
-              border: '1px solid rgba(112,0,255,0.35)',
-              padding: '0.75rem 1rem',
-              borderRadius: 14,
-              color: '#c4b5fd',
-              margin: '0.85rem 0',
-              fontSize: '0.88rem'
-            }}>
-              Code de confirmation : <strong style={{ color: '#fff', letterSpacing: '2.5px', fontSize: '1.15rem' }}>{otpCode}</strong>
-              <div style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '2px', fontWeight: 700 }}>✓ Rempli automatiquement</div>
+          <div style={{
+            background: 'rgba(0, 209, 255, 0.07)',
+            border: '1px solid rgba(0, 209, 255, 0.25)',
+            padding: '0.9rem 1.15rem',
+            borderRadius: 14,
+            color: '#cbd5e1',
+            margin: '1rem 0',
+            fontSize: '0.84rem',
+            lineHeight: 1.5,
+            textAlign: 'left',
+            display: 'flex',
+            gap: '0.75rem',
+            alignItems: 'flex-start'
+          }}>
+            <Mail size={18} color="#00d1ff" style={{ flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <p style={{ margin: 0, fontWeight: 700, color: '#fff' }}>Code OTP envoyé à votre adresse e-mail</p>
+              <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                Veuillez ouvrir votre boîte de réception (ou dossier Spams) sur votre messagerie et saisir ci-dessous le code à 6 chiffres pour accéder à votre compte.
+              </p>
             </div>
-          )}
+          </div>
 
           <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
             Expire dans : {!codeExpired
@@ -284,7 +284,7 @@ const AuthPage = ({ mode = 'login' }) => {
           )}
           {resendSuccess && (
             <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', padding: '0.75rem 1rem', borderRadius: 10, color: '#4ade80', margin: '1rem 0', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-              <CheckCircle2 size={16} /> Nouveau code envoyé !
+              <CheckCircle2 size={16} /> Nouveau code envoyé dans votre boîte e-mail !
             </div>
           )}
 
@@ -297,7 +297,7 @@ const AuthPage = ({ mode = 'login' }) => {
               style={{ width: '100%', marginTop: '0.5rem' }}
               disabled={loading || otpCode.length < 6 || codeExpired}
             >
-              {loading ? 'Vérification...' : <><CheckCircle2 size={18} /> Confirmer le compte</>}
+              {loading ? 'Vérification...' : <><CheckCircle2 size={18} /> Valider le code & Accéder au compte</>}
             </button>
           </form>
 
@@ -418,9 +418,9 @@ const AuthPage = ({ mode = 'login' }) => {
         </form>
 
         {mode === 'register' && (
-          <div style={{ marginTop: '1.25rem', padding: '0.85rem 1rem', background: 'rgba(112,0,255,0.06)', border: '1px solid rgba(112,0,255,0.15)', borderRadius: 12, fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Mail size={14} style={{ color: '#a78bfa', flexShrink: 0 }} />
-            Un code de vérification sera généré pour activer votre compte.
+          <div style={{ marginTop: '1.25rem', padding: '0.85rem 1rem', background: 'rgba(0,209,255,0.06)', border: '1px solid rgba(0,209,255,0.2)', borderRadius: 12, fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Mail size={14} style={{ color: '#00d1ff', flexShrink: 0 }} />
+            Un code OTP sera envoyé à votre adresse e-mail pour activer et accéder à votre compte.
           </div>
         )}
 
