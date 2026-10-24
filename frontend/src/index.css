@@ -2528,11 +2528,59 @@ body.light-mode .orbit-ring { box-shadow: 0 0 24px rgba(139, 92, 246, 0.15); }
   .hero-3d-stage {
     flex-direction: column;
     align-items: center;
-    transform: perspective(1200px) rotateX(4deg);
+    transform: none !important;
   }
 
   .hero-orbit {
-    width: min(360px, 100%);
+    width: min(320px, 92vw);
+  }
+
+  /* Disable heavy 3D transforms on mobile for silky smooth 60fps scrolling */
+  .tilt-surface,
+  .course-card,
+  .stat-box,
+  .admin-stat-card,
+  .hero-glass {
+    transform: none !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  .tilt-surface:hover,
+  .course-card:hover,
+  .stat-box:hover,
+  .admin-stat-card:hover {
+    transform: translateY(-2px) !important;
+  }
+
+  /* Smooth momentum touch scrolling */
+  html, body {
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: none;
+    scroll-behavior: smooth;
+  }
+
+  /* Smooth mobile auth container without layout jump */
+  .auth-page {
+    min-height: 100dvh !important;
+    padding: 1.25rem 0.75rem 2.5rem !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box !important;
+  }
+
+  .auth-card {
+    width: 100% !important;
+    max-width: 440px !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 48px standard touch targets */
+  button, input, select, textarea {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 

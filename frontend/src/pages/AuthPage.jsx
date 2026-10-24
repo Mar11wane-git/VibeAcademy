@@ -9,53 +9,62 @@ import VibeLogo from '../components/VibeLogo';
 // ─── Mobile-Friendly OTP Input Component ──────────────────────────────────
 const OTPInput = ({ value, onChange }) => {
   const inputs = useRef([]);
-  const digits = (value || '').split('').slice(0, 6);
+  const digits = (value || '').padEnd(6, '').split('').slice(0, 6);
 
   const handleInputChange = (e, i) => {
     const rawVal = e.target.value.replace(/\D/g, '');
     if (!rawVal) {
-      const next = [...digits];
+      const next = (value || '').split('');
       next[i] = '';
       onChange(next.join(''));
       return;
     }
 
     if (rawVal.length > 1) {
-      const pastedDigits = rawVal.slice(0, 6).split('');
-      const next = [...digits];
-      pastedDigits.forEach((char, idx) => {
-        if (i + idx < 6) next[i + idx] = char;
-      });
-      onChange(next.join(''));
-      const nextFocus = Math.min(i + pastedDigits.length, 5);
+      const pastedDigits = rawVal.slice(0, 6);
+      onChange(pastedDigits);
+      const nextFocus = Math.min(pastedDigits.length, 5);
       inputs.current[nextFocus]?.focus();
       return;
     }
 
-    const next = [...digits];
+    const next = (value || '').padEnd(6, '').split('').slice(0, 6);
     next[i] = rawVal[rawVal.length - 1];
-    onChange(next.join(''));
+    const newCombined = next.join('').trimEnd();
+    onChange(newCombined);
     if (i < 5) {
       inputs.current[i + 1]?.focus();
     }
   };
 
   const handleKeyDown = (e, i) => {
-    if (e.key === 'Backspace' && (!digits[i] || digits[i] === ' ') && i > 0) {
-      inputs.current[i - 1]?.focus();
+    if (e.key === 'Backspace') {
+      const currentDigits = (value || '').split('');
+      if (!currentDigits[i] && i > 0) {
+        inputs.current[i - 1]?.focus();
+      }
     }
   };
 
   const handlePaste = (e) => {
     e.preventDefault();
     const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    onChange(pasted);
-    const targetIdx = Math.min(pasted.length, 5);
-    inputs.current[targetIdx]?.focus();
+    if (pasted) {
+      onChange(pasted);
+      const targetIdx = Math.min(pasted.length, 5);
+      inputs.current[targetIdx]?.focus();
+    }
   };
 
   return (
-    <div style={{ display: 'flex', gap: 'clamp(0.35rem, 1.5vw, 0.75rem)', justifyContent: 'center', margin: '1.25rem 0' }}>
+    <div style={{
+      display: 'flex',
+      gap: 'clamp(4px, 1.8vw, 10px)',
+      justifyContent: 'center',
+      margin: '1.25rem 0',
+      width: '100%',
+      boxSizing: 'border-box'
+    }}>
       {Array.from({ length: 6 }).map((_, i) => (
         <input
           key={i}
@@ -63,26 +72,29 @@ const OTPInput = ({ value, onChange }) => {
           type="tel"
           pattern="[0-9]*"
           inputMode="numeric"
-          maxLength={1}
-          value={digits[i] || ''}
+          autoComplete={i === 0 ? "one-time-code" : "off"}
+          maxLength={i === 0 ? 6 : 1}
+          value={digits[i] ? digits[i].trim() : ''}
           onChange={e => handleInputChange(e, i)}
           onKeyDown={e => handleKeyDown(e, i)}
           onPaste={handlePaste}
           onFocus={e => e.target.select()}
           style={{
-            width: 'clamp(40px, 12vw, 52px)',
-            height: 'clamp(48px, 14vw, 60px)',
+            width: 'clamp(38px, 12vw, 50px)',
+            height: 'clamp(48px, 14vw, 58px)',
             textAlign: 'center',
-            fontSize: 'clamp(1.2rem, 4.5vw, 1.6rem)',
-            fontWeight: 900,
+            fontSize: 'clamp(1.25rem, 5vw, 1.55rem)',
+            fontWeight: 800,
             fontFamily: 'monospace',
-            borderRadius: 14,
-            border: `2px solid ${digits[i] ? 'rgba(112,0,255,0.6)' : 'var(--glass-border)'}`,
-            background: digits[i] ? 'rgba(112,0,255,0.08)' : 'var(--bg-tertiary)',
-            color: 'var(--text-main)',
+            borderRadius: 12,
+            border: `2px solid ${digits[i]?.trim() ? '#00d1ff' : 'var(--glass-border)'}`,
+            background: digits[i]?.trim() ? 'rgba(0,209,255,0.08)' : 'var(--bg-tertiary)',
+            color: '#ffffff',
             outline: 'none',
-            transition: '0.2s',
+            transition: 'border-color 0.2s, background 0.2s',
             WebkitAppearance: 'none',
+            touchAction: 'manipulation',
+            boxSizing: 'border-box',
           }}
         />
       ))}

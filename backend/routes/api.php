@@ -19,29 +19,44 @@ use App\Http\Controllers\AgendaController;
 Route::post('/register',      [AuthController::class, 'register']);
 Route::post('/login',         [AuthController::class, 'login']);
 
-Route::get('/debug-email', function () {
-    $diagnostics = [
-        'default_mailer' => config('mail.default'),
-        'host'           => config('mail.mailers.smtp.host'),
-        'port'           => config('mail.mailers.smtp.port'),
-        'encryption'     => config('mail.mailers.smtp.encryption'),
-        'username'       => config('mail.mailers.smtp.username'),
-        'password_len'   => strlen((string)config('mail.mailers.smtp.password')),
-        'from'           => config('mail.from'),
+Route::get('/debug-email', function (Illuminate\Http\Request $request) {
+    $targetEmail = $request->query('to', 'elhamdawimarwane@gmail.com');
+    $user = new App\Models\User(['name' => 'Test User', 'email' => $targetEmail]);
+    $code = '999888';
+    
+    $smtpConfigs = [
+        ['port' => 465, 'encryption' => 'ssl'],
+        ['port' => 587, 'encryption' => 'tls'],
     ];
 
-    try {
-        Illuminate\Support\Facades\Mail::raw('Diagnostic test from MR1Academy Railway ' . date('Y-m-d H:i:s'), function ($m) {
-            $m->to('elhamdawimarwane@gmail.com')->subject('MR1Academy SMTP Diagnostic');
-        });
-        $diagnostics['result'] = 'SUCCESS_SENT';
-    } catch (\Throwable $e) {
-        $diagnostics['result'] = 'ERROR';
-        $diagnostics['error_message'] = $e->getMessage();
-        $diagnostics['error_class'] = get_class($e);
+    $attempts = [];
+    foreach ($smtpConfigs as $cfg) {
+        try {
+            config([
+                'mail.default' => 'smtp',
+                'mail.mailers.smtp.transport' => 'smtp',
+                'mail.mailers.smtp.host' => 'smtp.gmail.com',
+                'mail.mailers.smtp.port' => $cfg['port'],
+                'mail.mailers.smtp.encryption' => $cfg['encryption'],
+                'mail.mailers.smtp.username' => 'elhamdawimarwane@gmail.com',
+                'mail.mailers.smtp.password' => 'oszznqskgkzvryvr',
+                'mail.mailers.smtp.timeout' => 8,
+                'mail.from.address' => 'elhamdawimarwane@gmail.com',
+                'mail.from.name' => 'MR1Academy',
+            ]);
+            (new \Illuminate\Mail\MailManager(app()))->forgetMailers();
+            Illuminate\Support\Facades\Mail::to($user->email)->send(new App\Mail\VerificationCodeMail($code, $user->name));
+            return response()->json([
+                'status' => 'SUCCESS',
+                'delivered_to' => $user->email,
+                'via_port' => $cfg['port'],
+                'encryption' => $cfg['encryption'],
+            ]);
+        } catch (\Throwable $e) {
+            $attempts[] = ['port' => $cfg['port'], 'error' => $e->getMessage()];
+        }
     }
-
-    return response()->json($diagnostics);
+    return response()->json(['status' => 'FAILED', 'attempts' => $attempts], 500);
 });
 
 // Maintenance-protected Routes

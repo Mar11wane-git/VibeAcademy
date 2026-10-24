@@ -6,6 +6,6 @@ Route::any('/api/test', function () {
     return response()->json(['status' => 'ok', 'message' => 'MR1Academy API is running!']);
 });
 
-Route::get('/{any}', function () {
-    return response()->json(['message' => 'API not found. Use /api/* routes.'], 404);
-})->where('any', '.*');
+Route::fallback(function () {
+    return response()->json(['message' => 'API route not found. Use /api/* routes.'], 404);
+});

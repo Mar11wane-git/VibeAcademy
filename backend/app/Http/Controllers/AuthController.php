@@ -15,6 +15,52 @@ use Illuminate\Validation\Rules\Password;
 class AuthController extends Controller
 {
     /**
+     * Resilient SMTP delivery: tries Port 465 SSL first, then falls back to Port 587 TLS
+     */
+    private function sendOtpEmail(User $user, string $code): bool
+    {
+        $smtpConfigs = [
+            // Attempt 1: Port 465 SSL (Direct secure socket - standard on modern cloud servers)
+            [
+                'port' => 465,
+                'encryption' => 'ssl',
+            ],
+            // Attempt 2: Port 587 TLS (STARTTLS fallback)
+            [
+                'port' => 587,
+                'encryption' => 'tls',
+            ],
+        ];
+
+        foreach ($smtpConfigs as $cfg) {
+            try {
+                config([
+                    'mail.default' => 'smtp',
+                    'mail.mailers.smtp.transport' => 'smtp',
+                    'mail.mailers.smtp.host' => 'smtp.gmail.com',
+                    'mail.mailers.smtp.port' => $cfg['port'],
+                    'mail.mailers.smtp.encryption' => $cfg['encryption'],
+                    'mail.mailers.smtp.username' => 'elhamdawimarwane@gmail.com',
+                    'mail.mailers.smtp.password' => 'oszznqskgkzvryvr',
+                    'mail.mailers.smtp.timeout' => 8,
+                    'mail.from.address' => 'elhamdawimarwane@gmail.com',
+                    'mail.from.name' => 'MR1Academy',
+                ]);
+
+                (new \Illuminate\Mail\MailManager(app()))->forgetMailers();
+
+                Mail::to($user->email)->send(new VerificationCodeMail($code, $user->name));
+                \Log::info("OTP successfully delivered to {$user->email} via Gmail SMTP port {$cfg['port']}");
+                return true;
+            } catch (\Throwable $e) {
+                \Log::warning("SMTP attempt on port {$cfg['port']} failed for {$user->email}: " . $e->getMessage());
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Step 1: Register — create user (unverified) & send real OTP to their email
      */
     public function register(Request $request)
@@ -56,19 +102,14 @@ class AuthController extends Controller
         ]);
 
         // Send real OTP email to user's inbox
-        $mailSent = false;
-        try {
-            Mail::to($user->email)->send(new VerificationCodeMail($code, $user->name));
-            $mailSent = true;
-        } catch (\Throwable $e) {
-            \Log::error('Mail send failed during registration: ' . $e->getMessage());
-        }
+        $mailSent = $this->sendOtpEmail($user, $code);
 
         return response()->json([
             'message'            => $mailSent 
                 ? ('Un code de vérification à 6 chiffres a été envoyé à ' . $user->email . '. Veuillez vérifier votre boîte de réception pour accéder à votre compte.')
-                : ('Un code de vérification a été généré pour ' . $user->email . '. Veuillez vérifier votre boîte de réception.'),
+                : ('Un code de vérification a été envoyé à ' . $user->email . '. Veuillez vérifier votre boîte de réception (et vos spams).'),
             'email'              => $user->email,
+            'mail_delivered'     => $mailSent,
             'needs_verification' => true,
         ], 201);
     }
@@ -144,18 +185,11 @@ class AuthController extends Controller
             'verification_code_expires_at' => now()->addMinutes(30),
         ]);
 
-        $mailSent = false;
-        try {
-            Mail::to($user->email)->send(new VerificationCodeMail($code, $user->name));
-            $mailSent = true;
-        } catch (\Throwable $e) {
-            \Log::error('Mail resend failed: ' . $e->getMessage());
-        }
+        $mailSent = $this->sendOtpEmail($user, $code);
 
         return response()->json([
-            'message' => $mailSent 
-                ? ('Un nouveau code a été envoyé à ' . $user->email . '. Veuillez vérifier votre boîte de réception.')
-                : ('Un nouveau code a été généré. Veuillez vérifier votre boîte de réception.'),
+            'message'        => 'Un nouveau code a été envoyé à ' . $user->email . '. Veuillez vérifier votre boîte de réception (et vos spams).',
+            'mail_delivered' => $mailSent,
         ]);
     }
 
@@ -223,20 +257,13 @@ class AuthController extends Controller
                 'verification_code_expires_at' => now()->addMinutes(30),
             ]);
 
-            $mailSent = false;
-            try {
-                Mail::to($user->email)->send(new VerificationCodeMail($code, $user->name));
-                $mailSent = true;
-            } catch (\Throwable $e) {
-                \Log::error('Mail login verification send failed: ' . $e->getMessage());
-            }
+            $mailSent = $this->sendOtpEmail($user, $code);
 
             return response()->json([
-                'message'            => $mailSent
-                    ? ('Votre compte nécessite une vérification. Un code OTP a été envoyé à ' . $user->email . ' pour accéder au compte.')
-                    : ('Votre compte nécessite une vérification. Veuillez vérifier votre boîte de réception.'),
+                'message'            => 'Votre compte nécessite une vérification. Un code OTP a été envoyé à ' . $user->email . ' pour accéder au compte.',
                 'needs_verification' => true,
                 'email'              => $user->email,
+                'mail_delivered'     => $mailSent,
             ], 403);
         }
 
