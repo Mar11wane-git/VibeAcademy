@@ -19,6 +19,31 @@ use App\Http\Controllers\AgendaController;
 Route::post('/register',      [AuthController::class, 'register']);
 Route::post('/login',         [AuthController::class, 'login']);
 
+Route::get('/debug-email', function () {
+    $diagnostics = [
+        'default_mailer' => config('mail.default'),
+        'host'           => config('mail.mailers.smtp.host'),
+        'port'           => config('mail.mailers.smtp.port'),
+        'encryption'     => config('mail.mailers.smtp.encryption'),
+        'username'       => config('mail.mailers.smtp.username'),
+        'password_len'   => strlen((string)config('mail.mailers.smtp.password')),
+        'from'           => config('mail.from'),
+    ];
+
+    try {
+        Illuminate\Support\Facades\Mail::raw('Diagnostic test from MR1Academy Railway ' . date('Y-m-d H:i:s'), function ($m) {
+            $m->to('elhamdawimarwane@gmail.com')->subject('MR1Academy SMTP Diagnostic');
+        });
+        $diagnostics['result'] = 'SUCCESS_SENT';
+    } catch (\Throwable $e) {
+        $diagnostics['result'] = 'ERROR';
+        $diagnostics['error_message'] = $e->getMessage();
+        $diagnostics['error_class'] = get_class($e);
+    }
+
+    return response()->json($diagnostics);
+});
+
 // Maintenance-protected Routes
 Route::middleware('maintenance')->group(function () {
     Route::post('/verify-email',  [AuthController::class, 'verifyEmail']);
