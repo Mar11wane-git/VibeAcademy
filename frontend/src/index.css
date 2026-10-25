@@ -2725,7 +2725,7 @@ body.light-mode .hero-glass::after {
   display: flex;
   justify-content: center;
   transform-style: preserve-3d;
-  transform: perspective(1200px) rotateX(calc(var(--rx) + 4deg)) rotateY(calc(var(--ry) - 10deg));
+  transform: perspective(1200px) rotateX(calc(var(--rx) + 4deg + var(--gy, 0) * 7deg)) rotateY(calc(var(--ry) - 10deg + var(--gx, 0) * 9deg));
   transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -2800,28 +2800,51 @@ body.light-mode .orbit-ring { box-shadow: 0 0 24px rgba(139, 92, 246, 0.15); }
   .hero-3d-stage {
     flex-direction: column;
     align-items: center;
-    transform: none !important;
+    /* Phone: no pointer, so the gyroscope (--gx/--gy) leans the stage instead */
+    transform: perspective(900px) rotateX(calc(var(--gy, 0) * 8deg)) rotateY(calc(var(--gx, 0) * 12deg)) !important;
   }
 
   .hero-orbit {
     width: min(320px, 92vw);
   }
 
-  /* Disable heavy 3D transforms on mobile for silky smooth 60fps scrolling */
+  /* Mobile keeps real 3D depth (layered shadows + press tilt), with a lighter shadow budget for 60fps */
   .tilt-surface,
   .course-card,
   .stat-box,
   .admin-stat-card,
   .hero-glass {
-    transform: none !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      0 2px 4px rgba(0, 0, 0, 0.35),
+      0 14px 24px -10px rgba(0, 0, 0, 0.55),
+      0 24px 40px -22px rgba(124, 58, 237, 0.4) !important;
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
   }
 
+  .tilt-surface.is-pressed,
+  .course-card.is-pressed,
+  .stat-box.is-pressed,
+  .admin-stat-card.is-pressed,
+  .hero-glass.is-pressed {
+    --lift: 2px;
+    transition-duration: 0.08s;
+  }
+
+  .tilt-surface.is-pressed::after,
+  .course-card.is-pressed::after,
+  .stat-box.is-pressed::after,
+  .admin-stat-card.is-pressed::after,
+  .hero-glass.is-pressed::after {
+    opacity: 1;
+  }
+
+  /* Pointer-only hover lift makes no sense on touch */
   .tilt-surface:hover,
   .course-card:hover,
   .stat-box:hover,
   .admin-stat-card:hover {
-    transform: translateY(-2px) !important;
+    --lift: 0px;
   }
 
   /* Smooth momentum touch scrolling */
@@ -2853,6 +2876,82 @@ body.light-mode .orbit-ring { box-shadow: 0 0 24px rgba(139, 92, 246, 0.15); }
   button, input, select, textarea {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   4D MOTION LAYER — depth that reacts to time and movement
+   --gx/--gy (gyroscope on phones, pointer on desktop) and --sy (scroll) come from utils/depth4d.js.
+   Uses the individual `translate` property so it composes with existing transform animations.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Parallax: background orbs sit at different depths and drift against the viewer */
+.orb-1 {
+  translate: calc(var(--gx, 0) * -38px) calc(var(--gy, 0) * -38px - var(--sy, 0) * 0.09px);
+}
+
+.orb-2 {
+  translate: calc(var(--gx, 0) * 52px) calc(var(--gy, 0) * 52px - var(--sy, 0) * 0.16px);
+}
+
+/* Levitation: stat cards float on their own phase, so the grid feels alive over time */
+@keyframes levitate {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -5px; }
+}
+
+.stat-box, .admin-stat-card {
+  animation: levitate 5.5s ease-in-out infinite;
+}
+
+.stat-box:nth-child(2n), .admin-stat-card:nth-child(2n) { animation-delay: -1.8s; animation-duration: 6.4s; }
+.stat-box:nth-child(3n), .admin-stat-card:nth-child(3n) { animation-delay: -3.2s; animation-duration: 7.1s; }
+
+/* Holographic sheen: a slow light sweep across glass surfaces (compositor-only: transform) */
+.stat-box, .admin-stat-card {
+  overflow: hidden;
+}
+
+.stat-box::before, .admin-stat-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.09), rgba(167, 139, 250, 0.1), transparent);
+  transform: translateX(0) rotate(12deg);
+  animation: holo-sweep 7s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.stat-box:nth-child(2n)::before, .admin-stat-card:nth-child(2n)::before { animation-delay: 2.3s; }
+.stat-box:nth-child(3n)::before, .admin-stat-card:nth-child(3n)::before { animation-delay: 4.6s; }
+
+@keyframes holo-sweep {
+  0%, 55% { transform: translateX(0) rotate(12deg); opacity: 0; }
+  65% { opacity: 1; }
+  100% { transform: translateX(520%) rotate(12deg); opacity: 0; }
+}
+
+/* Depth on pressable buttons also leans with the scene */
+.btn-pro-primary {
+  translate: calc(var(--gx, 0) * 1.5px) calc(var(--gy, 0) * 1.5px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-box, .admin-stat-card, .stat-box::before, .admin-stat-card::before {
+    animation: none;
+  }
+  .orb-1, .orb-2 { translate: none; }
+}
+
+@media (max-width: 768px) {
+  /* Keep levitation but halve the travel on phones */
+  @keyframes levitate {
+    0%, 100% { translate: 0 0; }
+    50% { translate: 0 -3px; }
   }
 }
 
