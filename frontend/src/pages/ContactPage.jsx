@@ -38,7 +38,7 @@ const FAQ_ITEMS = [
 
 const LOCAL_TICKETS_KEY = 'vibe_local_support_tickets_v1';
 
-const ContactPage = () => {
+const ContactPage = ({ embedded = false }) => {
   const navigate = useNavigate();
 
   const user = useMemo(() => {
@@ -128,8 +128,8 @@ const ContactPage = () => {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="page-view"
-      style={{ paddingBottom: '4rem' }}
+      className={embedded ? '' : 'page-view'}
+      style={{ paddingBottom: embedded ? '0' : '4rem' }}
     >
       {/* ── Toast Notification ── */}
       <AnimatePresence>

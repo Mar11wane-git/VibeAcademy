@@ -16,6 +16,8 @@ import {
   getLocalCompletedModules,
   getAllLocalCertificates,
 } from '../utils/certificationEngine';
+import AboutPage from './AboutPage';
+import ContactPage from './ContactPage';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -547,6 +549,16 @@ const Dashboard = () => {
           ))}
         </div>
       )}
+
+      {/* ═══ 5. À PROPOS SECTION UNDER DASHBOARD ═══ */}
+      <div style={{ marginTop: '4.5rem', paddingTop: '3.5rem', borderTop: '1px solid var(--glass-border)' }}>
+        <AboutPage embedded />
+      </div>
+
+      {/* ═══ 6. CONTACT & SUPPORT SECTION UNDER DASHBOARD ═══ */}
+      <div style={{ marginTop: '4.5rem', paddingTop: '3.5rem', borderTop: '1px solid var(--glass-border)' }}>
+        <ContactPage embedded />
+      </div>
     </motion.div>
   );
 };

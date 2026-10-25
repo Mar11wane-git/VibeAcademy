@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -53,7 +53,7 @@ const MENTORS_TEAM = [
   },
 ];
 
-const AboutPage = () => {
+const AboutPage = ({ embedded = false }) => {
   const navigate = useNavigate();
   const [courses, setCourses] = useState(() => getCachedData('/courses') || []);
   const [enrollments, setEnrollments] = useState(() => getCachedData('/my-courses') || []);
@@ -155,8 +155,8 @@ const AboutPage = () => {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="page-view"
-      style={{ paddingBottom: '4rem' }}
+      className={embedded ? '' : 'page-view'}
+      style={{ paddingBottom: embedded ? '0' : '4rem' }}
     >
       {/* ── Hero Institutionnel ── */}
       <div
