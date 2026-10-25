@@ -594,9 +594,9 @@ const Header = () => {
     if (currentPath === '/profile') return '/profile';
     if (currentPath === '/settings') return '/settings';
     if (currentPath === '/catalogue' || currentPath.startsWith('/course/')) return '/catalogue';
-    if (currentPath === '/mes-cours' || currentPath.startsWith('/courses/')) return '/mes-cours';
-    if (currentPath === '/agenda') return '/agenda';
-    if (currentPath === '/communaute') return '/communaute';
+    if (currentPath === '/mes-cours') return '/mes-cours';
+    if (currentPath === '/calendrier' || currentPath === '/calendar') return '/calendrier';
+    if (currentPath === '/communaute' || currentPath === '/community') return '/communaute';
     if (currentPath === '/favoris') return '/favoris';
     if (currentPath === '/certificats') return '/certificats';
     if (currentPath === '/contact' || currentPath === '/support') return '/contact';
@@ -639,10 +639,12 @@ const Header = () => {
           <option value="/dashboard">📊 Dashboard</option>
           <option value="/catalogue">📚 Catalogue (24)</option>
           <option value="/mes-cours">🎓 Mes Cours</option>
-          <option value="/agenda">📅 Agenda & Live</option>
+          <option value="/calendrier">📅 Agenda & Live</option>
           <option value="/communaute">💬 Communauté</option>
           <option value="/favoris">🔖 Favoris</option>
           <option value="/certificats">🏆 Certificats</option>
+          <option value="/apropos">ℹ️ À Propos</option>
+          <option value="/contact">✉️ Contact</option>
           <option value="/profile">👤 Mon Profil</option>
           <option value="/settings">⚙️ Paramètres</option>
           {user?.is_admin && <option value="/admin">🛡️ Administration</option>}

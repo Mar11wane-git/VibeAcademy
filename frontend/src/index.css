@@ -2107,9 +2107,62 @@ html, body {
 
 /* Modal Form Grids Collapse on Mobile */
 @media (max-width: 640px) {
-  div[style*="gridTemplateColumns: '1fr 1fr'"],
-  div[style*="gridTemplateColumns: '1fr 1fr 1fr'"],
-  div[style*="gridTemplateColumns: '1fr 160px'"] {
+  /* Agenda & Communauté : search bars / toolbars must never overflow */
+  .page-view div[style*="minWidth: 240px"],
+  .page-view div[style*="minWidth: 250px"],
+  .page-view div[style*="min-width: 240px"],
+  .page-view div[style*="min-width: 250px"] {
+    min-width: 0 !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  .page-view h2[style*="min-width: 155px"] {
+    min-width: 0 !important;
+  }
+
+  /* Toasts stay inside the viewport */
+  .page-view div[style*="position: fixed"][style*="right: 1.5rem"] {
+    left: 0.75rem !important;
+    right: 0.75rem !important;
+    top: 4.8rem !important;
+    max-width: none !important;
+  }
+
+  /* Modals: full width, scrollable, safe padding */
+  .page-view div[style*="position: fixed"][style*="inset: 0"] {
+    padding: 0.6rem !important;
+    align-items: flex-end !important;
+  }
+
+  .page-view div[style*="position: fixed"][style*="inset: 0"] > div {
+    max-height: 92dvh !important;
+    overflow-y: auto !important;
+    padding: 1.35rem 1.1rem !important;
+    border-radius: 20px !important;
+    max-width: 100% !important;
+  }
+
+  /* Wrap action rows */
+  .page-view div[style*="display: flex"][style*="justify-content: space-between"] {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .page-view button,
+  .page-view select {
+    max-width: 100%;
+  }
+
+  /* Agenda week view: smooth horizontal swipe */
+  .page-view div[style*="overflow-x: auto"] {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  div[style*="grid-template-columns: 1fr 1fr"],
+  div[style*="grid-template-columns: 1fr 1fr 1fr"],
+  div[style*="grid-template-columns: 1fr 160px"] {
     grid-template-columns: 1fr !important;
     gap: 0.75rem !important;
   }
